@@ -3,14 +3,23 @@ import * as store from './storage.js';
 import { parseNotes, guessSubject } from './parser.js';
 import { el, clear, toast, confetti } from './ui.js';
 
-import * as flashcards from './games/flashcards.js';
-import * as quiz from './games/quiz.js';
+import * as blaster from './games/blaster.js';
 import * as match from './games/match.js';
-import * as blank from './games/blank.js';
+import * as scramble from './games/scramble.js';
 import * as hangman from './games/hangman.js';
 
-const GAMES = [flashcards, quiz, match, blank, hangman];
+const GAMES = [blaster, match, scramble, hangman];
 const app = document.getElementById('app');
+
+// Some games (e.g. the arcade shooter) run animation loops / global listeners.
+// They return a cleanup fn we must call before navigating away.
+let activeCleanup = null;
+function runCleanup() {
+  if (activeCleanup) {
+    try { activeCleanup(); } catch (e) { /* ignore */ }
+    activeCleanup = null;
+  }
+}
 
 // ---------- Points HUD ----------
 function renderHUD() {
@@ -31,6 +40,7 @@ function awardPoints(score, total) {
 
 // ---------- Home ----------
 function viewHome() {
+  runCleanup();
   clear(app);
   const decks = store.getDecks();
 
@@ -38,13 +48,16 @@ function viewHome() {
     el('div.hero-badge', { text: '100% free · works offline · your notes stay on your device' }),
     el('h1.hero-title', { html: 'Turn your notes into<br><span class="grad">games you actually enjoy</span>' }),
     el('p.hero-sub', {
-      text: 'Paste any notes — a subject glossary, lecture summary, or Q&A — and instantly play flashcards, quizzes, memory match, and more.',
+      text: 'Paste any notes and instantly play real games built from them — blast the right answer out of the sky, unscramble terms, match, and outguess the clock.',
     }),
     el('button.btn.btn-primary.btn-lg', { onclick: viewImport, text: '➕ Add your notes' }),
   ]);
 
   const gamesStrip = el('div.games-strip', {}, GAMES.map((g) =>
-    el('div.game-chip', {}, [el('span.game-chip-icon', { text: g.meta.icon }), el('span', { text: g.meta.name })])
+    el('div.game-chip', { 'data-accent': g.meta.accent || 'blue' }, [
+      el('span.game-chip-icon', { text: g.meta.icon }),
+      el('span', { text: g.meta.name }),
+    ])
   ));
 
   const list = el('section.deck-list');
@@ -98,6 +111,7 @@ Newton's First Law states that an object stays at rest or in motion unless acted
 The powerhouse of the cell is the mitochondria.`;
 
 function viewImport() {
+  runCleanup();
   clear(app);
   const titleInput = el('input.field', { type: 'text', placeholder: 'Set title (e.g. Biology Ch. 3)' });
   const notesArea = el('textarea.field.notes-area', {
@@ -165,6 +179,7 @@ function viewImport() {
 
 // ---------- Deck (game menu) ----------
 function viewDeck(deckId) {
+  runCleanup();
   const deck = store.getDeck(deckId);
   if (!deck) return viewHome();
   clear(app);
@@ -175,6 +190,7 @@ function viewDeck(deckId) {
     const best = deck.bestScores[g.meta.id];
     grid.appendChild(
       el('article.gamemenu-card' + (playable ? '' : '.disabled'), {
+        'data-accent': g.meta.accent || 'blue',
         onclick: () => (playable ? viewGame(deckId, g.meta.id) : toast(`Needs at least ${g.meta.min} study points`, 'bad')),
       }, [
         el('div.gm-icon', { text: g.meta.icon }),
@@ -203,6 +219,7 @@ function viewDeck(deckId) {
 
 // ---------- Active game ----------
 function viewGame(deckId, gameId) {
+  runCleanup();
   const deck = store.getDeck(deckId);
   const game = GAMES.find((g) => g.meta.id === gameId);
   if (!deck || !game) return viewDeck(deckId);
@@ -216,13 +233,13 @@ function viewGame(deckId, gameId) {
     ])
   );
 
-  game.mount(stage, deck.cards, {
+  activeCleanup = game.mount(stage, deck.cards, {
     onComplete: (score, total) => {
       store.recordBestScore(deckId, gameId, score);
       awardPoints(score, total);
     },
     onExit: () => viewDeck(deckId),
-  });
+  }) || null;
 }
 
 // ---------- helpers ----------
