@@ -1,5 +1,6 @@
 // Memory Match — match each term to its definition against the clock.
 import { el, clear, shuffle, confetti, resultPanel, toast } from '../ui.js';
+import { sound } from '../sound.js';
 
 export const meta = {
   id: 'match',
@@ -33,6 +34,7 @@ export function mount(root, cards, ctx) {
     const seconds = Math.round((Date.now() - startTime) / 1000);
     const score = Math.max(ROUND * 10, ROUND * 100 - moves * 5 - seconds);
     clear(root);
+    sound.play('win');
     confetti();
     root.appendChild(
       resultPanel({
@@ -55,6 +57,7 @@ export function mount(root, cards, ctx) {
 
   function onPick(idx) {
     if (matched.has(idx) || selected.includes(idx) || selected.length === 2) return;
+    sound.play('select');
     selected.push(idx);
     renderTiles();
     if (selected.length === 2) {
@@ -64,9 +67,11 @@ export function mount(root, cards, ctx) {
         matched.add(a);
         matched.add(b);
         selected = [];
+        sound.play('match');
         renderTiles();
         if (matched.size === picks.length) setTimeout(finish, 350);
       } else {
+        sound.play('wrong');
         setTimeout(() => {
           selected = [];
           renderTiles();

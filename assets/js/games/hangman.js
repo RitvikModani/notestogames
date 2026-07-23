@@ -1,5 +1,6 @@
 // Word Guess — hangman-style guessing of key terms, with the definition as a clue.
 import { el, clear, shuffle, confetti, resultPanel, toast } from '../ui.js';
+import { sound } from '../sound.js';
 
 export const meta = {
   id: 'hangman',
@@ -23,7 +24,10 @@ export function mount(root, cards, ctx) {
 
   function finish() {
     clear(root);
-    if (score >= Math.ceil(words.length * 0.7)) confetti();
+    if (score >= Math.ceil(words.length * 0.7)) {
+      sound.play('win');
+      confetti();
+    }
     root.appendChild(
       resultPanel({
         score,
@@ -89,12 +93,14 @@ export function mount(root, cards, ctx) {
       if (revealed) {
         done = true;
         score++;
+        sound.play('correct');
         status.className = 'hm-status good show';
         status.textContent = '✓ Solved!';
         confettiMaybe();
         advance();
       } else if (misses >= MAX_MISSES) {
         done = true;
+        sound.play('wrong');
         status.className = 'hm-status bad show';
         status.innerHTML = `✗ It was <b>${card.term}</b>`;
         advance();
@@ -119,9 +125,11 @@ export function mount(root, cards, ctx) {
       if (answer.includes(ch)) {
         guessed.add(ch);
         btn.classList.add('hit');
+        sound.play('select');
       } else {
         misses++;
         btn.classList.add('miss');
+        sound.play('wrong');
       }
       btn.disabled = true;
       refresh();

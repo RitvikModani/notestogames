@@ -26,7 +26,7 @@ cost — everything runs in your browser and your notes never leave your device.
 
 ## 🕹️ The games
 
-Five different *kinds of play* — not one quiz in five costumes:
+Four different *kinds of play* — not one quiz in four costumes:
 
 | Game | Mechanic | What you do |
 | --- | --- | --- |
@@ -34,6 +34,10 @@ Five different *kinds of play* — not one quiz in five costumes:
 | 🧩 **Memory Match** | spatial memory | Pair each term with its definition against the clock. |
 | 🔀 **Word Scramble** | word manipulation | The term's letters are jumbled — rebuild it using the clue. |
 | 🔤 **Word Guess** | deduction | Hangman-style, guess the term letter by letter from its clue. |
+
+**Game feel & polish:** synthesized arcade sound + haptics (with a mute toggle,
+no audio files), an XP/level system, daily streaks, confetti, smooth view
+transitions, and full keyboard + `prefers-reduced-motion` accessibility.
 
 Your study sets, best scores, points and streak are saved in your browser
 (`localStorage`).

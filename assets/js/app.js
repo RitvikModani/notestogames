@@ -2,6 +2,7 @@
 import * as store from './storage.js';
 import { parseNotes, guessSubject } from './parser.js';
 import { el, clear, toast, confetti } from './ui.js';
+import { sound } from './sound.js';
 
 import * as blaster from './games/blaster.js';
 import * as match from './games/match.js';
@@ -21,21 +22,52 @@ function runCleanup() {
   }
 }
 
+// ---------- Level / XP ----------
+// Gentle curve: each level needs a bit more than the last.
+function levelInfo(points) {
+  let level = 1;
+  let need = 100;
+  let acc = 0;
+  while (points >= acc + need) {
+    acc += need;
+    level++;
+    need = Math.round(need * 1.35);
+  }
+  return { level, into: points - acc, need, pct: Math.min(100, Math.round(((points - acc) / need) * 100)) };
+}
+
 // ---------- Points HUD ----------
 function renderHUD() {
   const stats = store.getStats();
+  const lv = levelInfo(stats.points);
   const hud = document.getElementById('hud');
   clear(hud);
-  hud.appendChild(el('span.hud-item', { html: `⭐ <b>${stats.points}</b> pts` }));
-  hud.appendChild(el('span.hud-item', { html: `🔥 <b>${stats.streak}</b> day streak` }));
+  hud.appendChild(
+    el('span.hud-item.hud-level', { title: `${lv.into}/${lv.need} XP to level ${lv.level + 1}` }, [
+      el('b', { text: 'Lv ' + lv.level }),
+      el('span.hud-xp', {}, [el('span.hud-xp-bar', { style: `width:${lv.pct}%` })]),
+    ])
+  );
+  hud.appendChild(el('span.hud-item', { html: `⭐ <b>${stats.points}</b>` }));
+  hud.appendChild(el('span.hud-item.hud-streak', { html: `🔥 <b>${stats.streak}</b>` }));
 }
 
 function awardPoints(score, total) {
   if (!total) return;
+  const before = levelInfo(store.getStats().points).level;
   const gained = Math.max(0, Math.round((score / total) * 20) + score);
   store.addPoints(gained);
+  const after = levelInfo(store.getStats().points).level;
   renderHUD();
-  if (gained > 0) toast(`+${gained} points!`, 'good');
+  if (after > before) {
+    setTimeout(() => {
+      toast(`⬆ Level ${after}! Nice.`, 'good');
+      sound.play('win');
+      confetti(1000);
+    }, 400);
+  } else if (gained > 0) {
+    toast(`+${gained} points!`, 'good');
+  }
 }
 
 // ---------- Home ----------
@@ -260,5 +292,35 @@ function debounce(fn, ms) {
 
 // ---------- boot ----------
 renderHUD();
-document.getElementById('brand').addEventListener('click', viewHome);
+
+const brand = document.getElementById('brand');
+brand.addEventListener('click', viewHome);
+brand.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    viewHome();
+  }
+});
+
+// Sound toggle
+const soundBtn = document.getElementById('sound-toggle');
+function refreshSoundBtn() {
+  const m = sound.isMuted();
+  soundBtn.textContent = m ? '🔇' : '🔊';
+  soundBtn.setAttribute('aria-pressed', String(!m));
+  soundBtn.classList.toggle('muted', m);
+}
+soundBtn.addEventListener('click', () => {
+  sound.toggle();
+  refreshSoundBtn();
+});
+refreshSoundBtn();
+
+// Light click feedback on navigation controls (games handle their own sounds).
+document.addEventListener('click', (e) => {
+  if (e.target.closest('button.btn, .back-btn, .deck-card, .gamemenu-card:not(.disabled), .game-chip')) {
+    sound.play('click');
+  }
+});
+
 viewHome();

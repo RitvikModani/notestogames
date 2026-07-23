@@ -14,11 +14,14 @@
   <body>
     <header class="topbar">
       <div class="topbar-inner">
-        <div id="brand" class="brand" role="button" tabindex="0">
+        <div id="brand" class="brand" role="button" tabindex="0" aria-label="NotesToGames home">
           <span class="brand-mark">🎮</span>
           <span class="brand-name">Notes<span class="grad">To</span>Games</span>
         </div>
-        <div id="hud" class="hud"></div>
+        <div class="topbar-right">
+          <div id="hud" class="hud"></div>
+          <button id="sound-toggle" class="icon-btn" type="button" aria-label="Toggle sound" aria-pressed="true">🔊</button>
+        </div>
       </div>
     </header>
 

@@ -2,6 +2,7 @@
 // Read the clue, fly your ship, and SHOOT the correct answer before it lands.
 // A real action game: reflex + recall, lives, combos and rising speed.
 import { el, clear, shuffle, sample, confetti, resultPanel } from '../ui.js';
+import { sound } from '../sound.js';
 
 export const meta = {
   id: 'blaster',
@@ -82,6 +83,7 @@ export function mount(root, cards, ctx) {
       const gained = 100 + (combo - 1) * 20;
       score += gained;
       block.hitFx = 1;
+      sound.play('correct');
       burst(block.x, block.y, '#2ec4b6', 26);
       flash(`+${gained}${combo > 1 ? `  x${combo}` : ''}`, '#2ec4b6');
       block.alive = false;
@@ -93,6 +95,7 @@ export function mount(root, cards, ctx) {
       combo = 0;
       shake = 12;
       block.alive = false;
+      sound.play('wrong');
       burst(block.x, block.y, '#ff5252', 18);
       flash('WRONG', '#ff5252');
       if (lives <= 0) finish();
@@ -111,6 +114,7 @@ export function mount(root, cards, ctx) {
     const now = performance.now();
     if (now - lastFire < 180 || resolved) return;
     lastFire = now;
+    sound.play('shoot');
     bullets.push({ x: ship.x, y: H - 46 });
   }
 
@@ -286,7 +290,10 @@ export function mount(root, cards, ctx) {
     stopLoop();
     clear(root);
     const total = TOTAL_ROUNDS * 100;
-    if (lives > 0) confetti();
+    if (lives > 0) {
+      sound.play('win');
+      confetti();
+    }
     root.appendChild(
       resultPanel({
         score,
