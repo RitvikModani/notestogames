@@ -4,12 +4,18 @@ import { parseNotes, guessSubject } from './parser.js';
 import { el, clear, toast, confetti } from './ui.js';
 import { sound } from './sound.js';
 
+import { extractFile, ACCEPTED } from './extract.js';
 import * as blaster from './games/blaster.js';
+import * as snake from './games/snake.js';
+import * as timeattack from './games/timeattack.js';
+import * as climb from './games/climb.js';
+import * as factorfake from './games/factorfake.js';
+import * as wordsearch from './games/wordsearch.js';
 import * as match from './games/match.js';
 import * as scramble from './games/scramble.js';
 import * as hangman from './games/hangman.js';
 
-const GAMES = [blaster, match, scramble, hangman];
+const GAMES = [blaster, snake, timeattack, climb, factorfake, wordsearch, match, scramble, hangman];
 const app = document.getElementById('app');
 
 // Some games (e.g. the arcade shooter) run animation loops / global listeners.
@@ -80,7 +86,7 @@ function viewHome() {
     el('div.hero-badge', { text: '100% free · works offline · your notes stay on your device' }),
     el('h1.hero-title', { html: 'Turn your notes into<br><span class="grad">games you actually enjoy</span>' }),
     el('p.hero-sub', {
-      text: 'Paste any notes and instantly play real games built from them — blast the right answer out of the sky, unscramble terms, match, and outguess the clock.',
+      text: 'Upload a PDF, Word or PowerPoint — or paste your notes — and turn them into 9 real arcade games. No sign-up, no subscription, and your files never leave your device.',
     }),
     el('button.btn.btn-primary.btn-lg', { onclick: viewImport, text: '➕ Add your notes' }),
   ]);
@@ -171,6 +177,51 @@ function viewImport() {
 
   notesArea.addEventListener('input', debounce(refreshPreview, 250));
 
+  // ---- File upload (PDF / Word / PowerPoint / text) ----
+  const fileInput = el('input', { type: 'file', accept: ACCEPTED, multiple: true, style: 'display:none' });
+  const dropStatus = el('span.drop-status');
+  const dropzone = el('label.dropzone', {}, [
+    el('span.drop-icon', { text: '📄' }),
+    el('span.drop-main', { html: '<b>Upload a file</b> — PDF, Word (.docx), PowerPoint (.pptx) or text' }),
+    dropStatus,
+    fileInput,
+  ]);
+
+  async function handleFiles(files) {
+    if (!files || !files.length) return;
+    dropzone.classList.add('busy');
+    for (const file of files) {
+      dropStatus.textContent = `Reading ${file.name}…`;
+      try {
+        const { text, kind } = await extractFile(file);
+        const clean = (text || '').trim();
+        if (!clean || clean.length < 20) {
+          dropStatus.textContent = '';
+          toast(`Couldn't find readable text in ${file.name}.`, 'bad');
+          continue;
+        }
+        notesArea.value = (notesArea.value.trim() ? notesArea.value.trim() + '\n\n' : '') + clean;
+        if (!titleInput.value.trim()) titleInput.value = file.name.replace(/\.[^.]+$/, '');
+        dropStatus.textContent = `✓ Added ${kind} · ${clean.length.toLocaleString()} characters`;
+        sound.play('correct');
+      } catch (err) {
+        dropStatus.textContent = '';
+        toast(err.message || 'Could not read that file', 'bad');
+      }
+    }
+    dropzone.classList.remove('busy');
+    refreshPreview();
+  }
+
+  fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+  ['dragover', 'dragenter'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('over'); })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('over'); })
+  );
+  dropzone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+
   function create() {
     const { cards, warnings } = parseNotes(notesArea.value);
     if (cards.length === 0) {
@@ -191,6 +242,8 @@ function viewImport() {
       el('div.import-grid', {}, [
         el('div.import-left', {}, [
           titleInput,
+          dropzone,
+          el('div.or-divider', {}, [el('span', { text: 'or paste / type below' })]),
           notesArea,
           el('div.import-actions', {}, [
             el('button.btn.btn-ghost', {

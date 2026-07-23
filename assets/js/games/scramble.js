@@ -8,7 +8,7 @@ export const meta = {
   name: 'Word Scramble',
   icon: '🔀',
   tagline: 'Unscramble the term from its clue.',
-  accent: 'purple',
+  accent: 'orange',
   min: 2,
 };
 
