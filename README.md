@@ -15,8 +15,13 @@ cost — everything runs in your browser and your notes never leave your device.
 ## ✨ What it does
 
 1. **Bring your material.** Upload a **PDF, Word (.docx) or PowerPoint (.pptx)**,
-   or paste notes directly. Files are parsed **in your browser** (using the native
-   `DecompressionStream` API) — nothing is ever uploaded, so it's private and free.
+   or paste notes directly. Files are parsed **in your browser** — nothing is ever
+   uploaded, so it's private and free. Word/PowerPoint use the native
+   `DecompressionStream` API; PDFs (including exam papers with embedded fonts) are
+   read with a bundled build of **[pdf.js](https://mozilla.github.io/pdf.js/)**
+   (Apache-2.0), loaded on demand. Scanned/image-only PDFs can't be read as text —
+   copy-paste those. A quality check rejects unreadable files instead of making
+   garbage games.
    It understands the formats students actually use:
    - `Term: definition` / `Term - definition`
    - `Q: question` / `A: answer` (the answer becomes the concept, the question the clue)
@@ -98,6 +103,7 @@ assets/js/
   sound.js               # Web Audio arcade sound + haptics
   games/                 # blaster · snake · timeattack · climb · factorfake
                          # · wordsearch · match · scramble · hangman
+assets/vendor/           # pdf.js build (pdf.min.mjs + worker), Apache-2.0
 .nojekyll                # serve files as-is on GitHub Pages
 ```
 
