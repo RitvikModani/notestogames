@@ -51,11 +51,16 @@ python3 -m http.server 8000
 ```
 
 ### Publish it for free (GitHub Pages)
-This repo includes a workflow that deploys automatically at **no cost**:
+It's a plain static site, so hosting is free and takes two clicks:
 
-1. Push to the `main` branch.
-2. In your repo, go to **Settings → Pages** and set **Source: GitHub Actions**.
-3. Your site goes live at `https://<your-username>.github.io/notestogames/`.
+1. In your repo, go to **Settings → Pages**.
+2. Under **Build and deployment → Source**, choose **Deploy from a branch**, then
+   pick branch **`main`** and folder **`/ (root)`**, and **Save**.
+3. Your site goes live at `https://<your-username>.github.io/notestogames/`
+   (give it a minute on the first publish).
+
+No build step, no workflow, no cost. The included `.nojekyll` file makes GitHub
+serve the files as-is.
 
 ## 🗂️ Project structure
 
@@ -68,7 +73,7 @@ assets/js/
   storage.js             # localStorage decks, points & streaks
   ui.js                  # DOM helpers, confetti, toasts
   games/                 # blaster · match · scramble · hangman
-.github/workflows/       # free GitHub Pages deploy
+.nojekyll                # serve files as-is on GitHub Pages
 ```
 
 ## 🔒 Privacy
