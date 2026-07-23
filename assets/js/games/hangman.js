@@ -6,6 +6,7 @@ export const meta = {
   name: 'Word Guess',
   icon: '🔤',
   tagline: 'Guess the term letter by letter using its clue.',
+  accent: 'red',
   min: 2,
 };
 
