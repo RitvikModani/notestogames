@@ -77,7 +77,7 @@ export function confetti(duration = 1400) {
   };
   resize();
   document.body.appendChild(canvas);
-  const colors = ['#0066ff', '#00ffff', '#37e2e2', '#ffffff', '#34d399', '#2a7bff'];
+  const colors = ['#ff5a5f', '#ffc93c', '#2ec4b6', '#4361ee', '#8a5cf6', '#1c1a2e'];
   const pieces = Array.from({ length: 140 }, () => ({
     x: Math.random() * canvas.width,
     y: -20 - Math.random() * canvas.height * 0.3,
