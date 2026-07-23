@@ -47,8 +47,20 @@ body {
 .brand { display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
 .brand-mark { font-size: 26px; }
 .brand-name { font-weight: 900; font-size: 21px; letter-spacing: -0.03em; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
 .hud { display: flex; gap: 8px; }
-.hud-item { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--card); border: var(--bd); box-shadow: var(--hard-sm); }
+.hud-item { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 999px; background: var(--card); border: var(--bd); box-shadow: var(--hard-sm); }
+.hud-level { gap: 7px; }
+.hud-xp { width: 46px; height: 8px; background: var(--paper-2); border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.hud-xp-bar { display: block; height: 100%; background: var(--teal); transition: width 0.4s ease; }
+.icon-btn { display: grid; place-items: center; width: 38px; height: 38px; font-size: 18px; line-height: 1; cursor: pointer; background: var(--card); border: var(--bd); border-radius: 10px; box-shadow: var(--hard-sm); transition: transform 0.08s, box-shadow 0.08s; }
+.icon-btn:hover { transform: translate(-1px, -1px); }
+.icon-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.icon-btn.muted { background: var(--paper-2); opacity: 0.7; }
+@media (max-width: 560px) {
+  .hud-xp { display: none; }
+  .brand-name { font-size: 18px; }
+}
 
 /* ---------- Buttons ---------- */
 .btn {
@@ -230,8 +242,50 @@ body {
 .site-footer { text-align: center; color: var(--ink-soft); font-size: 13px; font-weight: 600; padding: 30px 20px 40px; border-top: var(--bd); margin-top: 20px; }
 .site-footer p { margin: 0; }
 
+/* ---------- View transitions ---------- */
+#app > .container { animation: viewIn 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.games-strip .game-chip { animation: floatIn 0.5s backwards; }
+.games-strip .game-chip:nth-child(1) { animation-delay: 0.04s; }
+.games-strip .game-chip:nth-child(2) { animation-delay: 0.10s; }
+.games-strip .game-chip:nth-child(3) { animation-delay: 0.16s; }
+.games-strip .game-chip:nth-child(4) { animation-delay: 0.22s; }
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(14px) rotate(-2deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+/* ---------- Accessibility: focus rings ---------- */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.deck-card:focus-visible,
+.gamemenu-card:focus-visible,
+[tabindex]:focus-visible,
+.field:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.match-tile:focus-visible,
+.hm-key:focus-visible,
+.sc-tile:focus-visible,
+.sc-slot:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 780px) {
   .import-grid { grid-template-columns: 1fr; }
   .import-right { position: static; }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

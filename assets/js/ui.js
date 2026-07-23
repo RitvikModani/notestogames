@@ -69,6 +69,8 @@ export function toast(message, type = 'info') {
 
 // Lightweight self-contained confetti burst (canvas). Called on wins.
 export function confetti(duration = 1400) {
+  // Respect users who prefer reduced motion — skip the animation entirely.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const canvas = el('canvas.confetti-canvas');
   const ctx = canvas.getContext('2d');
   const resize = () => {

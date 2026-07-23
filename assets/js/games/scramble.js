@@ -1,6 +1,7 @@
 // Word Scramble — the term's letters are jumbled; rebuild it using the clue.
 // A word-manipulation game (not a recall quiz): tap letters into the slots.
 import { el, clear, shuffle, confetti, resultPanel } from '../ui.js';
+import { sound } from '../sound.js';
 
 export const meta = {
   id: 'scramble',
@@ -22,7 +23,10 @@ export function mount(root, cards, ctx) {
   function finish() {
     clear(root);
     const total = items.length * 100;
-    if (score >= total * 0.6) confetti();
+    if (score >= total * 0.6) {
+      sound.play('win');
+      confetti();
+    }
     root.appendChild(
       resultPanel({
         score,
@@ -89,6 +93,7 @@ export function mount(root, cards, ctx) {
       if (slot < 0) return;
       slots[slot] = bankId;
       bank[bankId].used = true;
+      sound.play('select');
       afterMove();
     }
 
@@ -127,6 +132,7 @@ export function mount(root, cards, ctx) {
     function reveal() {
       if (solved) return;
       solved = true;
+      sound.play('wrong');
       status.className = 'sc-status show bad';
       status.innerHTML = `Answer: <b>${answer}</b>`;
       draw();
@@ -140,6 +146,7 @@ export function mount(root, cards, ctx) {
           solved = true;
           const gained = Math.max(25, 100 - hints * 25);
           score += gained;
+          sound.play('correct');
           status.className = 'sc-status show good';
           status.textContent = `✓ Correct!  +${gained}`;
           if (i + 1 >= items.length) confettiMaybe();
