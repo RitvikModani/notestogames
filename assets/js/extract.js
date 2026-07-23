@@ -123,7 +123,55 @@ function textFromContentStream(str) {
   return out;
 }
 
+// Preferred path: the real pdf.js engine (vendored) — decodes embedded CID /
+// Type0 fonts (exam papers, textbooks) that the lightweight parser can't.
+// Loaded on demand only when a PDF is uploaded; absent in the single-file
+// artifact build, where we fall back to the lightweight reader below.
+let pdfjsPromise = null;
+function loadPdfjs() {
+  if (pdfjsPromise) return pdfjsPromise;
+  const base = (typeof document !== 'undefined' && document.baseURI) || location.href;
+  pdfjsPromise = import(new URL('assets/vendor/pdf.min.mjs', base).href).then((lib) => {
+    lib.GlobalWorkerOptions.workerSrc = new URL('assets/vendor/pdf.worker.min.mjs', base).href;
+    return lib;
+  });
+  return pdfjsPromise;
+}
+
+async function extractPdfJs(buffer) {
+  const pdfjs = await loadPdfjs();
+  const doc = await pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    isEvalSupported: false,
+    disableFontFace: true,
+    verbosity: 0,
+  }).promise;
+  let out = '';
+  for (let i = 1; i <= doc.numPages; i++) {
+    const tc = await (await doc.getPage(i)).getTextContent();
+    let line = '';
+    let lastY = null;
+    for (const it of tc.items) {
+      const y = it.transform ? it.transform[5] : null;
+      if (lastY !== null && y !== null && Math.abs(y - lastY) > 4) { out += line.trim() + '\n'; line = ''; }
+      line += it.str + (it.hasEOL ? '\n' : ' ');
+      lastY = y;
+    }
+    out += line.trim() + '\n';
+  }
+  return out.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 async function extractPdf(buffer) {
+  // Try the real engine first; fall back to the lightweight reader.
+  try {
+    const text = await extractPdfJs(buffer);
+    if (text && text.length > 20) return text;
+  } catch (e) { /* fall back */ }
+  return extractPdfLite(buffer);
+}
+
+async function extractPdfLite(buffer) {
   const bytes = new Uint8Array(buffer);
   const latin1 = new TextDecoder('latin1').decode(bytes);
   let text = '';
@@ -148,31 +196,44 @@ async function extractPdf(buffer) {
   return text.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+// Quality gate: reject binary/font gibberish so we never build garbage games.
+// Mojibake from mis-decoded fonts is full of accented/symbol characters, so we
+// measure the share of characters OUTSIDE normal Latin study text rather than
+// just "is it a letter" (accented junk counts as letters).
+function isGibberish(s) {
+  if (!s || s.trim().length < 20) return true;
+  const normal = (s.match(/[A-Za-z0-9\s.,;:!?'"()\[\]{}\-–—/%&+=*@#$°²³½×·…’‘“”éèêëàâäîïôöûüùçñáíóúÁÉÑ]/g) || []).length;
+  const weirdRatio = 1 - normal / s.length;
+  const asciiWords = (s.match(/[A-Za-z]{2,}/g) || []).length;
+  return weirdRatio > 0.16 || asciiWords < 8;
+}
+
 /**
  * Extract text from a File. Returns { text, kind } or throws with a friendly message.
  */
 export async function extractFile(file) {
   const name = (file.name || '').toLowerCase();
   const buffer = await file.arrayBuffer();
+  let text = '';
+  let kind = 'Text';
   try {
-    if (name.endsWith('.pdf')) return { text: await extractPdf(buffer), kind: 'PDF' };
-    if (name.endsWith('.docx')) return { text: await extractDocx(buffer), kind: 'Word' };
-    if (name.endsWith('.pptx')) return { text: await extractPptx(buffer), kind: 'PowerPoint' };
-    if (name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv')) {
-      return { text: new TextDecoder().decode(buffer), kind: 'Text' };
-    }
-    if (name.endsWith('.doc') || name.endsWith('.ppt')) {
+    if (name.endsWith('.pdf')) { text = await extractPdf(buffer); kind = 'PDF'; }
+    else if (name.endsWith('.docx')) { text = await extractDocx(buffer); kind = 'Word'; }
+    else if (name.endsWith('.pptx')) { text = await extractPptx(buffer); kind = 'PowerPoint'; }
+    else if (name.endsWith('.doc') || name.endsWith('.ppt')) {
       throw new Error('Old .doc/.ppt formats aren\'t supported — please re-save as .docx / .pptx.');
-    }
-    // Fallback: try as plain text.
-    return { text: new TextDecoder().decode(buffer), kind: 'Text' };
+    } else { text = new TextDecoder().decode(buffer); kind = /\.(txt|md|csv)$/.test(name) ? 'Text' : 'Text'; }
   } catch (err) {
-    throw new Error(
-      err.message && err.message.includes('re-save')
-        ? err.message
-        : 'Couldn\'t read that file. If it\'s a scanned/image PDF, try copy-pasting the text instead.'
-    );
+    throw new Error(err.message && err.message.includes('re-save') ? err.message
+      : 'Couldn\'t read that file. Try copy-pasting the text instead.');
   }
+
+  if (isGibberish(text)) {
+    throw new Error(kind === 'PDF'
+      ? 'This PDF\'s text couldn\'t be read (it\'s likely a scan or uses embedded fonts). Tip: open it, copy the text, and paste it below — or upload the original slides/notes as .pptx / .docx.'
+      : 'That file didn\'t contain readable text — try copy-pasting the text instead.');
+  }
+  return { text, kind };
 }
 
 export const ACCEPTED = '.pdf,.docx,.pptx,.txt,.md,.csv';
