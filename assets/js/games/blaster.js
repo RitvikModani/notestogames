@@ -9,7 +9,7 @@ export const meta = {
   name: 'Term Blaster',
   icon: '🚀',
   tagline: 'Shoot the right answer out of the sky.',
-  accent: 'blue',
+  accent: 'sky',
   min: 4,
 };
 

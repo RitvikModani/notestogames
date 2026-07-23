@@ -7,7 +7,7 @@ export const meta = {
   name: 'Memory Match',
   icon: '🧩',
   tagline: 'Pair every term with its definition.',
-  accent: 'teal',
+  accent: 'blue',
   min: 3,
 };
 

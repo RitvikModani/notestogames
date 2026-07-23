@@ -14,30 +14,47 @@ cost — everything runs in your browser and your notes never leave your device.
 
 ## ✨ What it does
 
-1. **Paste your notes.** It understands the formats students actually use:
-   - `Term: definition`
-   - `Term - definition`
-   - `Q: question` / `A: answer`
-   - Markdown-style `**Term**` lines and bulleted glossaries
-   - Plain paragraphs (it finds "X is …" definitions and key terms automatically)
-2. **It builds study material** — term/definition pairs and fill-in-the-blank
-   sentences — all locally in your browser (no AI service, no API keys, no cost).
-3. **You play & learn** with four different games, earning points and building a daily streak.
+1. **Bring your material.** Upload a **PDF, Word (.docx) or PowerPoint (.pptx)**,
+   or paste notes directly. Files are parsed **in your browser** (using the native
+   `DecompressionStream` API) — nothing is ever uploaded, so it's private and free.
+   It understands the formats students actually use:
+   - `Term: definition` / `Term - definition`
+   - `Q: question` / `A: answer` (the answer becomes the concept, the question the clue)
+   - bulleted glossaries and plain prose ("X is …" definitions, key terms)
+2. **It builds study material** — accurately categorised term/definition pairs,
+   fill-in-the-blank clozes, and a large **variety of question types** (match,
+   reverse, true/false, cloze, description) — all locally, no AI service or cost.
+3. **You play & learn** across **9 different games**, earning XP, leveling up, and
+   building a daily streak.
+
+## 🆚 How it's different
+
+Not another flashcard app or live quiz show. NotesToGames turns **your own files**
+into genuinely different *arcade* games — no account, no subscription, works
+offline, and your documents never leave your device.
 
 ## 🕹️ The games
 
-Four different *kinds of play* — not one quiz in four costumes:
+Nine different *kinds of play* — not one quiz in nine costumes:
 
 | Game | Mechanic | What you do |
 | --- | --- | --- |
-| 🚀 **Term Blaster** | arcade / reflex | Fly a ship and **shoot** the correct answer out of the sky before it lands. Lives, combos and rising speed. |
+| 🚀 **Term Blaster** | arcade / reflex | Fly a ship and **shoot** the correct answer out of the sky. Lives, combos, rising speed. |
+| 🐍 **Recall Snake** | movement | Steer the snake into the lettered tile whose answer matches the clue. |
+| ⏱️ **Time Attack** | speed | Answer as many varied questions as you can before the clock runs out; combo multiplier. |
+| 🧗 **Concept Climb** | risk / progression | Each correct answer scales you higher and is worth more; slip and you lose a rope. |
+| 🕵️ **Fact or Fake** | judgment | Decide fast whether a shown definition is real or a swapped-in decoy. |
+| 🔍 **Word Search** | search / spatial | Drag across a letter grid to find the hidden terms — the clues are their definitions. |
 | 🧩 **Memory Match** | spatial memory | Pair each term with its definition against the clock. |
 | 🔀 **Word Scramble** | word manipulation | The term's letters are jumbled — rebuild it using the clue. |
 | 🔤 **Word Guess** | deduction | Hangman-style, guess the term letter by letter from its clue. |
 
-**Game feel & polish:** synthesized arcade sound + haptics (with a mute toggle,
-no audio files), an XP/level system, daily streaks, confetti, smooth view
-transitions, and full keyboard + `prefers-reduced-motion` accessibility.
+**Question variety:** the quiz-style games draw from a shared engine that mixes
+term→definition, definition→term, true/false, cloze, and "pick the description".
+
+**Game feel & polish:** synthesized arcade sound + haptics (mute toggle, no audio
+files), an XP/level system, daily streaks, confetti, smooth transitions, and full
+keyboard + `prefers-reduced-motion` accessibility.
 
 Your study sets, best scores, points and streak are saved in your browser
 (`localStorage`).
@@ -70,13 +87,17 @@ serve the files as-is.
 
 ```
 index.html               # app shell
-assets/css/style.css     # "Arcade Paper" theme (neobrutalist, cream + ink)
+assets/css/style.css     # "Midnight Studio" theme (elegant dark, warm amber accent)
 assets/js/
-  app.js                 # routing + views (home, import, deck, game)
-  parser.js              # turns raw notes into study cards
+  app.js                 # routing + views (home, import, deck, game) + file upload
+  parser.js              # notes/document text -> accurately categorised study cards
+  extract.js             # in-browser PDF / Word / PowerPoint text extraction
+  questions.js           # varied question generator (match, T/F, cloze, …)
   storage.js             # localStorage decks, points & streaks
   ui.js                  # DOM helpers, confetti, toasts
-  games/                 # blaster · match · scramble · hangman
+  sound.js               # Web Audio arcade sound + haptics
+  games/                 # blaster · snake · timeattack · climb · factorfake
+                         # · wordsearch · match · scramble · hangman
 .nojekyll                # serve files as-is on GitHub Pages
 ```
 
