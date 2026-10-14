@@ -35,14 +35,34 @@ const TIERS = [
   [0, '💪', 'Respawn and run it back.'],
 ];
 
+// Plain (memes-off) captions for result screens.
+const PLAIN = [
+  [95, '🏆', 'Outstanding!'],
+  [80, '🎉', 'Great work!'],
+  [60, '👍', 'Nicely done.'],
+  [40, '🙂', 'Good progress.'],
+  [0, '💪', 'Keep practising.'],
+];
+
 const pick = (arr) => arr[(Math.random() * arr.length) | 0];
 const reduce = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const MEME_KEY = 'n2g.memes.v1';
+let enabled = true;
+try { enabled = localStorage.getItem(MEME_KEY) !== '0'; } catch (e) { /* ignore */ }
 
 let node = null;
 let timer = null;
 
 export const meme = {
+  isOn() { return enabled; },
+  toggle() {
+    enabled = !enabled;
+    try { localStorage.setItem(MEME_KEY, enabled ? '1' : '0'); } catch (e) { /* ignore */ }
+    return enabled;
+  },
   pop(correct) {
+    if (!enabled) return;
     const [emoji, caption] = pick(correct ? WIN : LOSE);
     if (!node) {
       node = document.createElement('div');
@@ -63,7 +83,8 @@ export const meme = {
     timer = setTimeout(() => { if (node) node.classList.remove('show'); }, 1050);
   },
   forScore(pct) {
-    for (const [min, emoji, caption] of TIERS) if (pct >= min) return { emoji, caption };
-    return { emoji: '💪', caption: 'Run it back.' };
+    const table = enabled ? TIERS : PLAIN;
+    for (const [min, emoji, caption] of table) if (pct >= min) return { emoji, caption };
+    return { emoji: '💪', caption: enabled ? 'Run it back.' : 'Keep going.' };
   },
 };
