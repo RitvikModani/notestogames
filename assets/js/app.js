@@ -1,6 +1,7 @@
 // app.js — the controller: routing between views, importing notes, launching games.
 import * as store from './storage.js';
 import { parseNotes, guessSubject } from './parser.js';
+import { summarize } from './summarize.js';
 import { el, clear, toast, confetti } from './ui.js';
 import { sound } from './sound.js';
 
@@ -14,8 +15,12 @@ import * as wordsearch from './games/wordsearch.js';
 import * as match from './games/match.js';
 import * as scramble from './games/scramble.js';
 import * as hangman from './games/hangman.js';
+import * as fcStudy from './study/flashcards.js';
+import * as quizStudy from './study/quiz.js';
 
 const GAMES = [blaster, snake, timeattack, climb, factorfake, wordsearch, match, scramble, hangman];
+const STUDY = [fcStudy, quizStudy];
+const PLAYABLE = GAMES.concat(STUDY);
 const app = document.getElementById('app');
 
 // Some games (e.g. the arcade shooter) run animation loops / global listeners.
@@ -86,7 +91,7 @@ function viewHome() {
     el('div.hero-badge', { text: '100% free · works offline · your notes stay on your device' }),
     el('h1.hero-title', { html: 'Turn your notes into<br><span class="grad">games you actually enjoy</span>' }),
     el('p.hero-sub', {
-      text: 'Upload a PDF, Word or PowerPoint — or paste your notes — and turn them into 9 real arcade games. No sign-up, no subscription, and your files never leave your device.',
+      text: 'Upload a PDF, Word or PowerPoint — or paste your notes — and get an instant summary, flashcards, quizzes and 9 arcade games. No sign-up, no subscription, and your files never leave your device.',
     }),
     el('button.btn.btn-primary.btn-lg', { onclick: viewImport, text: '➕ Add your notes' }),
   ]);
@@ -296,17 +301,89 @@ function viewDeck(deckId) {
         el('span.deck-subject.lg', { text: deck.subject }),
         el('span.deck-meta', { text: `${deck.cards.length} study points` }),
       ]),
-      el('h2.section-title', { text: 'Pick a game' }),
+
+      el('h2.section-title', { text: 'Study' }),
+      el('div.study-bento', {}, [
+        el('article.study-card.study-summary', { onclick: () => viewSummary(deckId) }, [
+          el('div.study-ic', { text: '📝' }),
+          el('div', {}, [
+            el('h3', { text: 'Smart Summary' }),
+            el('p', { text: 'An instant TL;DR, the key points, and every key term — pulled from your notes.' }),
+          ]),
+          el('div.study-feat', {}, [
+            el('span', { text: '⚡ TL;DR' }),
+            el('span', { text: '🔑 Key points' }),
+            el('span', { text: '🏷️ Key terms' }),
+          ]),
+          el('span.study-go', { text: 'Open summary →' }),
+        ]),
+        ...STUDY.map((g) => {
+          const playable = deck.cards.length >= g.meta.min;
+          const best = deck.bestScores[g.meta.id];
+          return el('article.study-card' + (playable ? '' : '.disabled'), {
+            'data-accent': g.meta.accent,
+            onclick: () => (playable ? viewGame(deckId, g.meta.id) : toast(`Needs at least ${g.meta.min} study points`, 'bad')),
+          }, [
+            el('div.study-ic', { text: g.meta.icon }),
+            el('div', {}, [el('h3', { text: g.meta.name }), el('p', { text: g.meta.tagline })]),
+            best != null ? el('span.gm-best', { text: `Best: ${best}` }) : el('span.study-go', { text: playable ? 'Start →' : '🔒' }),
+          ]);
+        }),
+      ]),
+
+      el('h2.section-title.section-play', { text: 'Play' }),
+      el('p.section-sub', { text: 'Nine arcade games built from the same notes.' }),
       grid,
     ])
   );
+}
+
+// ---------- Summary ----------
+function viewSummary(deckId) {
+  runCleanup();
+  const deck = store.getDeck(deckId);
+  if (!deck) return viewHome();
+  clear(app);
+  const sum = summarize(deck.rawNotes || deck.cards.map((c) => `${c.term}: ${c.definition}`).join('. '), deck.cards);
+
+  const copyText = `TL;DR: ${sum.tldr}\n\nKey points:\n` + sum.keyPoints.map((p) => '• ' + p).join('\n') +
+    `\n\nKey terms: ${sum.keyTerms.join(', ')}`;
+
+  app.appendChild(el('div.container', {}, [
+    backBar(`📝 ${deck.title} — Summary`, () => viewDeck(deckId)),
+    el('div.sum-wrap', {}, [
+      el('div.sum-stats', {}, [
+        el('div.sum-stat', {}, [el('b', { text: sum.stats.points }), el('span', { text: 'study points' })]),
+        el('div.sum-stat', {}, [el('b', { text: sum.stats.words.toLocaleString() }), el('span', { text: 'words' })]),
+        el('div.sum-stat', {}, [el('b', { text: '~' + sum.stats.readingMin + 'm' }), el('span', { text: 'read' })]),
+      ]),
+      el('div.sum-tldr', {}, [el('span.sum-tldr-label', { text: 'TL;DR' }), el('p', { text: sum.tldr })]),
+      el('div.sum-grid', {}, [
+        el('div.sum-points', {}, [
+          el('h3.sum-h', { text: '🔑 Key points' }),
+          el('ul.sum-list', {}, sum.keyPoints.map((p) => el('li', { text: p }))),
+        ]),
+        el('div.sum-terms', {}, [
+          el('h3.sum-h', { text: '🏷️ Key terms' }),
+          el('div.sum-chips', {}, sum.keyTerms.map((t) => el('span.sum-chip', { text: t }))),
+          el('div.sum-actions', {}, [
+            el('button.btn.btn-primary', { onclick: () => viewGame(deckId, 'flashcards'), text: '🗂️ Review as flashcards' }),
+            el('button.btn.btn-ghost', {
+              onclick: (e) => { navigator.clipboard && navigator.clipboard.writeText(copyText); toast('Summary copied', 'good'); },
+              text: '⧉ Copy summary',
+            }),
+          ]),
+        ]),
+      ]),
+    ]),
+  ]));
 }
 
 // ---------- Active game ----------
 function viewGame(deckId, gameId) {
   runCleanup();
   const deck = store.getDeck(deckId);
-  const game = GAMES.find((g) => g.meta.id === gameId);
+  const game = PLAYABLE.find((g) => g.meta.id === gameId);
   if (!deck || !game) return viewDeck(deckId);
   clear(app);
 

@@ -29,8 +29,19 @@ cost — everything runs in your browser and your notes never leave your device.
 2. **It builds study material** — accurately categorised term/definition pairs,
    fill-in-the-blank clozes, and a large **variety of question types** (match,
    reverse, true/false, cloze, description) — all locally, no AI service or cost.
-3. **You play & learn** across **9 different games**, earning XP, leveling up, and
-   building a daily streak.
+3. **You study your way** — a **Smart Summary** (TL;DR, key points, key terms),
+   classic **Flashcards**, a self-paced **Quiz**, and **9 arcade games** — all from
+   the same notes, earning XP, leveling up, and building a daily streak.
+
+## 📚 Study suite
+
+Calm, focused study tools that sit alongside the games:
+
+| Tool | What it does |
+| --- | --- |
+| 📝 **Smart Summary** | An instant extractive summary — a one-line TL;DR, the top key points, key terms, and read-time/word-count stats. |
+| 🗂️ **Flashcards** | Self-paced flip review; rate yourself (keyboard-friendly: Space to flip, ← →). |
+| ✍️ **Quiz** | Self-paced multiple-choice review with instant feedback and the correct answer shown. |
 
 ## 🆚 How it's different
 
@@ -96,6 +107,7 @@ assets/css/style.css     # "Midnight Studio" theme (elegant dark, warm amber acc
 assets/js/
   app.js                 # routing + views (home, import, deck, game) + file upload
   parser.js              # notes/document text -> accurately categorised study cards
+  summarize.js           # client-side extractive summary (TL;DR, key points/terms)
   extract.js             # in-browser PDF / Word / PowerPoint text extraction
   questions.js           # varied question generator (match, T/F, cloze, …)
   storage.js             # localStorage decks, points & streaks
@@ -103,6 +115,7 @@ assets/js/
   sound.js               # Web Audio arcade sound + haptics
   games/                 # blaster · snake · timeattack · climb · factorfake
                          # · wordsearch · match · scramble · hangman
+  study/                 # flashcards · quiz (calm, self-paced study tools)
 assets/vendor/           # pdf.js build (pdf.min.mjs + worker), Apache-2.0
 .nojekyll                # serve files as-is on GitHub Pages
 ```
