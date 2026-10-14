@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+
+# Publishes the static site to GitHub Pages on every push to main.
+# Uses the official GitHub Pages actions, which run on GitHub's servers
+# (not the local sandbox) and enable Pages automatically on the first run
+# via `enablement: true` — no manual Settings → Pages step needed.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Minimal permissions needed to deploy Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Turn Pages on (with source = GitHub Actions) on the first run.
+          enablement: true
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Serve the repository root as-is (static site, .nojekyll present).
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
