@@ -110,16 +110,21 @@ python3 -m http.server 8000
 ```
 
 ### Publish it for free (GitHub Pages)
-It's a plain static site, so hosting is free and takes two clicks:
+It's a plain static site, so hosting is free. A small GitHub Actions workflow
+(`.github/workflows/pages.yml`) publishes it automatically:
 
-1. In your repo, go to **Settings → Pages**.
-2. Under **Build and deployment → Source**, choose **Deploy from a branch**, then
-   pick branch **`main`** and folder **`/ (root)`**, and **Save**.
+1. Push to **`main`** (or run the **Deploy to GitHub Pages** workflow manually
+   from the **Actions** tab).
+2. The workflow enables Pages on its first run and deploys the repository root
+   as-is — no build step. The included `.nojekyll` file keeps GitHub from
+   running Jekyll.
 3. Your site goes live at `https://<your-username>.github.io/notestogames/`
-   (give it a minute on the first publish).
+   (give it a minute on the first publish). The live URL is also shown on the
+   workflow run's summary.
 
-No build step, no workflow, no cost. The included `.nojekyll` file makes GitHub
-serve the files as-is.
+Prefer the simplest possible setup instead? You can delete the workflow and use
+**Settings → Pages → Deploy from a branch → `main` / `/ (root)`** — both serve
+the same static files for free.
 
 ## 🗂️ Project structure
 
