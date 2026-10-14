@@ -126,7 +126,7 @@ serve the files as-is.
 ```
 index.html               # app shell
 assets/css/style.css     # "Riso Arcade" theme — bold riso inks on warm paper
-assets/css/fonts.css     # self-hosted Bricolage Grotesque (OFL), inlined as data URIs
+assets/css/fonts.css     # self-hosted Anton + Archivo (OFL), inlined as data URIs
 assets/js/
   memes.js               # self-contained meme reactions on right/wrong (no images)
   app.js                 # routing + views (home, import, deck, game) + file upload
@@ -149,10 +149,11 @@ assets/vendor/           # pdf.js (PDF) + tesseract/ (photo OCR engine + model)
 A deliberately distinctive, risograph-inspired look that avoids the usual
 AI-generated-website tells (no Inter, no indigo→purple gradient, no
 glassmorphism, no gradient text, no accent-rail cards, nothing centered by
-default). Instead: a real display typeface (**Bricolage Grotesque**, self-hosted
-so it works offline and inside the sandboxed build), bold riso inks (coral, blue,
-yellow, green, pink) on warm paper, grain texture, offset "misprint" accents,
-chunky ink outlines, and an editorial left-aligned hero. For fun, correct/wrong
+default). Instead: real display type (**Anton** poster caps for headlines +
+**Archivo** for headings, both self-hosted so they work offline and inside the
+sandboxed build), bold riso inks (coral, blue, yellow, green, pink) on warm
+paper, grain texture, offset "misprint" accents, chunky ink outlines, a
+**light/dark** switch, and an editorial left-aligned hero. For fun, correct/wrong
 answers trigger **meme reactions** — built from emoji + meme-culture captions
 (no copyrighted images), so it stays free and offline.
 
