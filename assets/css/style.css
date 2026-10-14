@@ -389,6 +389,53 @@ body {
 .fc-yes { background: rgba(79, 209, 160, 0.12); border-color: rgba(79, 209, 160, 0.4); color: #7fe6c2; }
 .rq-foot { display: flex; justify-content: center; min-height: 48px; }
 
+/* ---------- Segmented controls ---------- */
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg-btn { border: none; background: none; color: var(--muted); font: inherit; font-weight: 600; font-size: 12.5px; padding: 6px 15px; border-radius: 999px; cursor: pointer; transition: color 0.15s, background 0.15s; }
+.seg-btn:hover { color: var(--text); }
+.seg-btn.on { background: var(--iris); color: #241a06; }
+
+/* ---------- Deck panel + mastery dashboard ---------- */
+.deck-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 30px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; gap: 16px; }
+.deck-panel-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.deck-diff { display: flex; align-items: center; gap: 10px; }
+.deck-diff-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.mastery { display: flex; align-items: center; gap: 18px; }
+.mastery-bar-wrap { flex: 1; min-width: 0; }
+.mastery-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 7px; flex-wrap: wrap; gap: 6px; }
+.mastery-head b { color: var(--gold); font-size: 16px; }
+.mastery-legend { color: var(--muted); font-size: 12px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.ok { background: var(--good); } .dot.warn { background: var(--warn); } .dot.new { background: var(--faint); }
+.mastery-bar { height: 10px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.mastery-fill { height: 100%; background: linear-gradient(90deg, var(--good), var(--gold)); transition: width 0.5s ease; }
+.mastery-cta { white-space: nowrap; flex: none; }
+.mastery-done { color: var(--good); font-weight: 700; font-size: 14px; white-space: nowrap; }
+@media (max-width: 620px) { .mastery { flex-direction: column; align-items: stretch; } .mastery-cta { width: 100%; } }
+
+/* ---------- Summary length row ---------- */
+.sum-lenrow { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.sum-len-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* ---------- Flashcard options + toggle ---------- */
+.fc-opts-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; display: flex; flex-direction: column; gap: 18px; box-shadow: var(--shadow-soft); max-width: 420px; margin: 16px auto; width: 100%; }
+.fc-opts-card h3 { margin: 0; font-size: 19px; font-weight: 750; text-align: center; }
+.fc-opt-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fc-opt-row > span { font-size: 14px; color: var(--muted); }
+.fc-start { margin-top: 4px; }
+.toggle { font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); cursor: pointer; }
+.toggle.on { background: var(--iris-soft); border-color: var(--iris); color: var(--gold); }
+
+/* ---------- Quiz typed (free recall) ---------- */
+.rq-input { width: 100%; font: inherit; font-size: 18px; text-align: center; background: var(--surface); border: 1.5px solid var(--line-2); border-radius: 12px; padding: 14px; color: var(--text); outline: none; }
+.rq-input:focus { border-color: var(--iris); box-shadow: var(--ring); }
+.rq-input.correct { border-color: var(--good); }
+.rq-input.wrong { border-color: var(--bad); }
+.rq-typed-fb { text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; opacity: 0; transition: opacity 0.2s; }
+.rq-typed-fb.show { opacity: 1; }
+.rq-typed-fb.good { color: var(--good); }
+.rq-typed-fb.bad { color: var(--bad); }
+
 /* ---------- View transitions ---------- */
 #app > .container { animation: viewIn 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

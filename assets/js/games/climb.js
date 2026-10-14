@@ -17,13 +17,14 @@ export const meta = {
 const RUNGS = 8;
 
 export function mount(root, cards, ctx) {
-  let questions, height, score, ropes, locked, ended;
+  const difficulty = ctx.difficulty || 'medium';
+  let questions, height, score, ropes, locked, ended, currentQ;
 
   function rungValue(h) { return 100 + h * 50; }
   function total() { let t = 0; for (let h = 0; h < RUNGS; h++) t += rungValue(h); return t + 300; }
 
   function start() {
-    questions = buildQuestions(cards, { limit: 60 });
+    questions = buildQuestions(cards, { limit: 60, difficulty, allowTyped: false });
     height = 0; score = 0; ropes = 3; locked = false; ended = false;
     render();
   }
@@ -44,6 +45,7 @@ export function mount(root, cards, ctx) {
   function choose(btn, opt) {
     if (locked || ended) return;
     locked = true;
+    if (ctx.onCard && currentQ && currentQ.answerTerm) ctx.onCard(currentQ.answerTerm, !!opt.correct);
     [...root.querySelectorAll('.q-opt')].forEach((b) => { b.disabled = true; if (b.__correct) b.classList.add('correct'); });
     if (opt.correct) {
       score += rungValue(height);
@@ -66,6 +68,7 @@ export function mount(root, cards, ctx) {
 
   function render() {
     const q = questions[(RUNGS - 1 - height + score) % questions.length] || questions[height % questions.length];
+    currentQ = q;
     clear(root);
     const track = el('div.climb-track');
     for (let h = RUNGS; h >= 0; h--) {

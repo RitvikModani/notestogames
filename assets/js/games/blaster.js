@@ -27,11 +27,14 @@ export function mount(root, cards, ctx) {
   // game state
   let order, roundIdx, score, lives, combo, blocks, bullets, particles, ship;
   let baseSpeed, shake, lastFire, resolved, message, messageColor, messageUntil;
+  const difficulty = ctx.difficulty || 'medium';
+  const SPEED = { easy: 0.62, medium: 0.85, hard: 1.15 }[difficulty] || 0.85;
+  const NDISTRACT = difficulty === 'easy' ? 2 : 3;
   const keys = { left: false, right: false };
 
   function newRound() {
     const card = order[roundIdx];
-    const distractors = sample(usable, 3, card).map((c) => c.term);
+    const distractors = sample(usable, NDISTRACT, card).map((c) => c.term);
     const opts = shuffle([card.term, ...distractors]);
     const lanes = shuffle(opts.map((_, i) => i));
     blocks = opts.map((text, i) => ({
@@ -67,6 +70,7 @@ export function mount(root, cards, ctx) {
       lives--;
       shake = 14;
       flash('MISS', '#ff5252');
+      if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, false);
     }
     combo = failed ? 0 : combo;
     setTimeout(() => {
@@ -84,6 +88,7 @@ export function mount(root, cards, ctx) {
       score += gained;
       block.hitFx = 1;
       sound.play('correct');
+      if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, true);
       burst(block.x, block.y, '#2ec4b6', 26);
       flash(`+${gained}${combo > 1 ? `  x${combo}` : ''}`, '#2ec4b6');
       block.alive = false;
@@ -314,7 +319,7 @@ export function mount(root, cards, ctx) {
     lives = 3;
     combo = 0;
     particles = [];
-    baseSpeed = 0.85;
+    baseSpeed = SPEED;
     shake = 0;
     lastFire = 0;
     message = '';

@@ -43,6 +43,22 @@ Calm, focused study tools that sit alongside the games:
 | 🗂️ **Flashcards** | Self-paced flip review; rate yourself (keyboard-friendly: Space to flip, ← →). |
 | ✍️ **Quiz** | Self-paced multiple-choice review with instant feedback and the correct answer shown. |
 
+## 🧠 Built for deep learning (not a showpiece)
+
+The whole app is wired around evidence-based study techniques:
+
+- **Spaced-repetition mastery.** Every answer — in any game, quiz or flashcard —
+  moves that card up or down a Leitner box. Each deck shows a **mastery dashboard**
+  (strong · to-review · new) and a **"Review weak cards"** button that resurfaces
+  exactly what you keep missing.
+- **Active recall everywhere.** The modes make you *retrieve* answers, not just
+  reread — the single biggest lever for retention.
+- **Desirable difficulty.** Pick **Easy / Medium / Hard** per deck. Hard swaps
+  recognition (multiple choice) for **free recall** (type the answer), adds
+  tougher look-alike distractors, and speeds the arcade games up.
+- **You're in control.** Choose **summary length** (short / medium / detailed),
+  **how many flashcards**, and whether to **focus your weakest cards first**.
+
 ## 🆚 How it's different
 
 Not another flashcard app or live quiz show. NotesToGames turns **your own files**

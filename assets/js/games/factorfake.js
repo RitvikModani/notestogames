@@ -39,6 +39,7 @@ export function mount(root, cards, ctx) {
     if (locked) return;
     locked = true;
     const correct = saidReal === fact.isReal;
+    if (ctx.onCard) ctx.onCard(fact.term, correct);
     if (correct) { score++; sound.play('correct'); } else sound.play('wrong');
     const verdict = el('div.ff-verdict.show ' + (correct ? 'good' : 'bad'), {
       html: correct
@@ -53,7 +54,7 @@ export function mount(root, cards, ctx) {
 
   function render() {
     clear(root);
-    const fact = factStatement(usable, order[i]);
+    const fact = factStatement(usable, order[i], ctx.difficulty || 'medium');
     const realBtn = el('button.ff-btn.ff-real', { text: '✓ Real' });
     const fakeBtn = el('button.ff-btn.ff-fake', { text: '✕ Fake' });
     realBtn.onclick = () => answer(true, fact, realBtn, fakeBtn);
