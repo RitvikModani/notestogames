@@ -18,9 +18,11 @@ import * as scramble from './games/scramble.js';
 import * as hangman from './games/hangman.js';
 import * as fcStudy from './study/flashcards.js';
 import * as quizStudy from './study/quiz.js';
+import * as patternsStudy from './study/patterns.js';
+import * as ai from './ai.js';
 
 const GAMES = [blaster, snake, timeattack, climb, factorfake, wordsearch, match, scramble, hangman];
-const STUDY = [fcStudy, quizStudy];
+const STUDY = [patternsStudy, fcStudy, quizStudy];
 const PLAYABLE = GAMES.concat(STUDY);
 const app = document.getElementById('app');
 
@@ -486,6 +488,8 @@ function viewGame(deckId, gameId, opts = {}) {
     flashcardCount: settings.flashcardCount,
     focusWeak: !!opts.focusWeak,
     weakOrder: store.cardsByWeakness(deck),
+    rawNotes: deck.rawNotes || '',
+    openAISettings: () => openAIDialog(),
     onCard: (term, correct) => store.recordCard(deckId, term, correct),
     onComplete: (score, total) => {
       store.recordBestScore(deckId, gameId, score);
@@ -509,6 +513,52 @@ function debounce(fn, ms) {
     clearTimeout(t);
     t = setTimeout(() => fn(...a), ms);
   };
+}
+
+// ---------- AI mode settings (bring your own free key) ----------
+function openAIDialog() {
+  const existing = document.getElementById('ai-modal');
+  if (existing) existing.remove();
+  const keyInput = el('input.field', { type: 'password', placeholder: 'Paste your Gemini API key', value: ai.getKey(), autocomplete: 'off' });
+  const status = el('div.ai-status');
+  const modal = el('div#ai-modal.modal-backdrop', { onclick: (e) => { if (e.target.id === 'ai-modal') modal.remove(); } }, []);
+  function setStatus() {
+    const on = ai.aiAvailable();
+    status.className = 'ai-status ' + (on ? 'on' : 'off');
+    status.textContent = on ? '✨ AI mode is ON' : 'AI mode is off — the free offline engine is in use';
+    refreshAIBtn();
+  }
+  const testBtn = el('button.btn.btn-ghost', {
+    text: 'Test key',
+    onclick: async (e) => {
+      ai.setKey(keyInput.value); setStatus();
+      const b = e.currentTarget; b.textContent = 'Testing…'; b.disabled = true;
+      try {
+        await ai.generateQuestions({ notes: 'Photosynthesis lets plants turn light into glucose.', pattern: 'apply', count: 1 });
+        toast('Key works — AI mode ready ✨', 'good');
+      } catch (err) { toast(ai.aiErrorMessage(err), 'bad'); }
+      b.textContent = 'Test key'; b.disabled = false;
+    },
+  });
+  modal.appendChild(el('div.modal', {}, [
+    el('div.modal-head', {}, [el('h3', { text: '✨ AI question mode' }), el('button.modal-x', { onclick: () => modal.remove(), text: '✕' })]),
+    el('p.modal-p', { html: 'Generate higher-order <b>Apply · Analyze · Create</b> questions — and AI grading of your written answers — from your own notes. Uses Google Gemini’s <b>free tier</b>: bring your own key. It’s stored only on this device and is sent straight to Google, never to us.' }),
+    el('ol.modal-steps', {}, [
+      el('li', { html: 'Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> (no card needed).' }),
+      el('li', { text: 'Paste it below and Save.' }),
+    ]),
+    keyInput,
+    status,
+    el('div.modal-actions', {}, [
+      testBtn,
+      el('button.btn.btn-ghost', { text: 'Remove', onclick: () => { ai.setKey(''); keyInput.value = ''; setStatus(); toast('AI key removed', 'bad'); } }),
+      el('button.btn.btn-primary', { text: 'Save', onclick: () => { ai.setKey(keyInput.value); setStatus(); toast(ai.aiAvailable() ? 'AI mode on ✨' : 'AI mode off', 'good'); } }),
+    ]),
+    el('p.modal-note', { text: 'Tip: you can restrict the key to your site’s domain in Google AI Studio. AI works on the hosted site; the sandboxed preview may block external AI calls.' }),
+  ]));
+  document.body.appendChild(modal);
+  setStatus();
+  setTimeout(() => keyInput.focus(), 40);
 }
 
 // ---------- boot ----------
@@ -577,6 +627,18 @@ if (themeBtn) {
     applyTheme(next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
   });
+}
+
+// AI mode settings button
+const aiBtn = document.getElementById('ai-toggle');
+function refreshAIBtn() {
+  if (!aiBtn) return;
+  aiBtn.classList.toggle('muted', !ai.aiAvailable());
+  aiBtn.title = ai.aiAvailable() ? 'AI mode: on' : 'AI mode: off';
+}
+if (aiBtn) {
+  aiBtn.addEventListener('click', openAIDialog);
+  refreshAIBtn();
 }
 
 // Light click feedback on navigation controls (games handle their own sounds).
