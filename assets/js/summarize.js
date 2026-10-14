@@ -19,7 +19,9 @@ function splitSentences(text) {
     .filter((s) => s.length > 24 && /[a-z]/.test(s) && s.split(' ').length >= 4);
 }
 
-export function summarize(rawText, cards = []) {
+export function summarize(rawText, cards = [], opts = {}) {
+  const length = opts.length || 'medium';
+  const LEN = { short: { pts: 3, terms: 6 }, medium: { pts: 5, terms: 8 }, detailed: { pts: 9, terms: 14 } }[length] || { pts: 5, terms: 8 };
   const text = (rawText || '').trim();
   const sentences = splitSentences(text);
   const words = (text.toLowerCase().match(/[a-z][a-z'-]{2,}/g) || []);
@@ -39,7 +41,7 @@ export function summarize(rawText, cards = []) {
     return { s, i, score };
   });
 
-  const take = Math.min(7, Math.max(3, Math.round(sentences.length * 0.28)));
+  const take = Math.min(LEN.pts, Math.max(2, Math.min(sentences.length, LEN.pts)));
   const keyPoints = scored
     .slice()
     .sort((a, b) => b.score - a.score)
@@ -50,11 +52,11 @@ export function summarize(rawText, cards = []) {
   const tldr = scored.slice().sort((a, b) => b.score - a.score)[0]?.s || (cards[0] ? `${cards[0].term}: ${cards[0].definition}` : '');
 
   // key terms: prefer parsed card terms, else most frequent content words
-  let keyTerms = cards.map((c) => c.term).filter(Boolean).slice(0, 10);
-  if (keyTerms.length < 5) {
+  let keyTerms = cards.map((c) => c.term).filter(Boolean).slice(0, LEN.terms);
+  if (keyTerms.length < Math.min(5, LEN.terms)) {
     keyTerms = Object.entries(freq)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, LEN.terms)
       .map(([w]) => w);
   }
 

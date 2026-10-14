@@ -13,10 +13,10 @@ export const meta = {
 
 export function mount(root, cards, ctx) {
   const ROUND = Math.min(6, cards.length);
-  let picks, matched, selected, moves, startTime, timerId;
+  let picks, matched, selected, moves, startTime, timerId, chosen;
 
   function setup() {
-    const chosen = shuffle(cards).slice(0, ROUND);
+    chosen = shuffle(cards).slice(0, ROUND);
     const tiles = [];
     chosen.forEach((c, idx) => {
       tiles.push({ pairId: idx, kind: 'term', text: c.term });
@@ -68,6 +68,7 @@ export function mount(root, cards, ctx) {
         matched.add(b);
         selected = [];
         sound.play('match');
+        if (ctx.onCard && chosen[picks[a].pairId]) ctx.onCard(chosen[picks[a].pairId].term, true);
         renderTiles();
         if (matched.size === picks.length) setTimeout(finish, 350);
       } else {

@@ -133,6 +133,7 @@ export function mount(root, cards, ctx) {
       if (solved) return;
       solved = true;
       sound.play('wrong');
+      if (ctx.onCard) ctx.onCard(card.term, false);
       status.className = 'sc-status show bad';
       status.innerHTML = `Answer: <b>${answer}</b>`;
       draw();
@@ -147,6 +148,7 @@ export function mount(root, cards, ctx) {
           const gained = Math.max(25, 100 - hints * 25);
           score += gained;
           sound.play('correct');
+          if (ctx.onCard) ctx.onCard(card.term, true);
           status.className = 'sc-status show good';
           status.textContent = `✓ Correct!  +${gained}`;
           if (i + 1 >= items.length) confettiMaybe();

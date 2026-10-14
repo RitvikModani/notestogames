@@ -294,12 +294,44 @@ function viewDeck(deckId) {
     );
   }
 
+  const mastery = store.deckMastery(deck);
+  const settings = store.getSettings(deck);
+
+  function diffControl() {
+    const seg = el('div.seg');
+    ['easy', 'medium', 'hard'].forEach((d) => {
+      seg.appendChild(el('button.seg-btn' + (settings.difficulty === d ? '.on' : ''), {
+        text: d[0].toUpperCase() + d.slice(1),
+        onclick: () => { store.updateSettings(deckId, { difficulty: d }); viewDeck(deckId); },
+      }));
+    });
+    return seg;
+  }
+
   app.appendChild(
     el('div.container', {}, [
       backBar(deck.title, viewHome),
-      el('div.deck-head', {}, [
-        el('span.deck-subject.lg', { text: deck.subject }),
-        el('span.deck-meta', { text: `${deck.cards.length} study points` }),
+
+      el('div.deck-panel', {}, [
+        el('div.deck-panel-top', {}, [
+          el('div', {}, [
+            el('span.deck-subject.lg', { text: deck.subject }),
+            el('span.deck-meta', { text: `  ${deck.cards.length} study points` }),
+          ]),
+          el('div.deck-diff', {}, [el('span.deck-diff-label', { text: 'Difficulty' }), diffControl()]),
+        ]),
+        el('div.mastery', {}, [
+          el('div.mastery-bar-wrap', {}, [
+            el('div.mastery-head', {}, [
+              el('span', { html: `<b>${mastery.pct}%</b> mastered` }),
+              el('span.mastery-legend', { html: `<i class="dot ok"></i>${mastery.mastered} strong &nbsp; <i class="dot warn"></i>${mastery.review} to review &nbsp; <i class="dot new"></i>${mastery.fresh} new` }),
+            ]),
+            el('div.mastery-bar', {}, [el('div.mastery-fill', { style: `width:${mastery.pct}%` })]),
+          ]),
+          mastery.review + mastery.fresh > 0
+            ? el('button.btn.btn-primary.mastery-cta', { onclick: () => viewGame(deckId, 'flashcards', { focusWeak: true }), text: '🎯 Review weak cards' })
+            : el('span.mastery-done', { text: '✓ All caught up!' }),
+        ]),
       ]),
 
       el('h2.section-title', { text: 'Study' }),
@@ -332,7 +364,7 @@ function viewDeck(deckId) {
       ]),
 
       el('h2.section-title.section-play', { text: 'Play' }),
-      el('p.section-sub', { text: 'Nine arcade games built from the same notes.' }),
+      el('p.section-sub', { text: `Nine arcade games · ${settings.difficulty} mode. Every round you play updates your mastery.` }),
       grid,
     ])
   );
@@ -344,14 +376,28 @@ function viewSummary(deckId) {
   const deck = store.getDeck(deckId);
   if (!deck) return viewHome();
   clear(app);
-  const sum = summarize(deck.rawNotes || deck.cards.map((c) => `${c.term}: ${c.definition}`).join('. '), deck.cards);
+  const settings = store.getSettings(deck);
+  const sum = summarize(
+    deck.rawNotes || deck.cards.map((c) => `${c.term}: ${c.definition}`).join('. '),
+    deck.cards,
+    { length: settings.summaryLength }
+  );
 
   const copyText = `TL;DR: ${sum.tldr}\n\nKey points:\n` + sum.keyPoints.map((p) => '• ' + p).join('\n') +
     `\n\nKey terms: ${sum.keyTerms.join(', ')}`;
 
+  const lenControl = el('div.seg.sum-len');
+  [['short', 'Short'], ['medium', 'Medium'], ['detailed', 'Detailed']].forEach(([v, label]) => {
+    lenControl.appendChild(el('button.seg-btn' + (settings.summaryLength === v ? '.on' : ''), {
+      text: label,
+      onclick: () => { store.updateSettings(deckId, { summaryLength: v }); viewSummary(deckId); },
+    }));
+  });
+
   app.appendChild(el('div.container', {}, [
     backBar(`📝 ${deck.title} — Summary`, () => viewDeck(deckId)),
     el('div.sum-wrap', {}, [
+      el('div.sum-lenrow', {}, [el('span.sum-len-label', { text: 'Length' }), lenControl]),
       el('div.sum-stats', {}, [
         el('div.sum-stat', {}, [el('b', { text: sum.stats.points }), el('span', { text: 'study points' })]),
         el('div.sum-stat', {}, [el('b', { text: sum.stats.words.toLocaleString() }), el('span', { text: 'words' })]),
@@ -360,7 +406,7 @@ function viewSummary(deckId) {
       el('div.sum-tldr', {}, [el('span.sum-tldr-label', { text: 'TL;DR' }), el('p', { text: sum.tldr })]),
       el('div.sum-grid', {}, [
         el('div.sum-points', {}, [
-          el('h3.sum-h', { text: '🔑 Key points' }),
+          el('h3.sum-h', { text: `🔑 Key points (${sum.keyPoints.length})` }),
           el('ul.sum-list', {}, sum.keyPoints.map((p) => el('li', { text: p }))),
         ]),
         el('div.sum-terms', {}, [
@@ -380,12 +426,13 @@ function viewSummary(deckId) {
 }
 
 // ---------- Active game ----------
-function viewGame(deckId, gameId) {
+function viewGame(deckId, gameId, opts = {}) {
   runCleanup();
   const deck = store.getDeck(deckId);
   const game = PLAYABLE.find((g) => g.meta.id === gameId);
   if (!deck || !game) return viewDeck(deckId);
   clear(app);
+  const settings = store.getSettings(deck);
 
   const stage = el('div.game-stage');
   app.appendChild(
@@ -396,6 +443,11 @@ function viewGame(deckId, gameId) {
   );
 
   activeCleanup = game.mount(stage, deck.cards, {
+    difficulty: settings.difficulty,
+    flashcardCount: settings.flashcardCount,
+    focusWeak: !!opts.focusWeak,
+    weakOrder: store.cardsByWeakness(deck),
+    onCard: (term, correct) => store.recordCard(deckId, term, correct),
     onComplete: (score, total) => {
       store.recordBestScore(deckId, gameId, score);
       awardPoints(score, total);

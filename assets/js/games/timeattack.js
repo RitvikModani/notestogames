@@ -13,13 +13,15 @@ export const meta = {
   min: 4,
 };
 
-const DURATION = 45;
+const DURATIONS = { easy: 60, medium: 45, hard: 35 };
 
 export function mount(root, cards, ctx) {
+  const difficulty = ctx.difficulty || 'medium';
+  const DURATION = DURATIONS[difficulty] || 45;
   let questions, qi, score, attempts, combo, timeLeft, timerId, locked, ended;
 
   function start() {
-    questions = buildQuestions(cards, { limit: 40 });
+    questions = buildQuestions(cards, { limit: 40, difficulty, allowTyped: false });
     qi = 0; score = 0; attempts = 0; combo = 0; timeLeft = DURATION; locked = false; ended = false;
     render();
     clearInterval(timerId);
@@ -57,6 +59,7 @@ export function mount(root, cards, ctx) {
     locked = true;
     attempts++;
     const good = opt.correct;
+    if (ctx.onCard && questions[qi] && questions[qi].answerTerm) ctx.onCard(questions[qi].answerTerm, good);
     if (good) {
       combo++;
       bestCombo = Math.max(bestCombo, combo);

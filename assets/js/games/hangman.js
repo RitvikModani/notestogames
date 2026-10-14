@@ -94,6 +94,7 @@ export function mount(root, cards, ctx) {
         done = true;
         score++;
         sound.play('correct');
+        if (ctx.onCard) ctx.onCard(card.term, true);
         status.className = 'hm-status good show';
         status.textContent = '✓ Solved!';
         confettiMaybe();
@@ -101,6 +102,7 @@ export function mount(root, cards, ctx) {
       } else if (misses >= MAX_MISSES) {
         done = true;
         sound.play('wrong');
+        if (ctx.onCard) ctx.onCard(card.term, false);
         status.className = 'hm-status bad show';
         status.innerHTML = `✗ It was <b>${card.term}</b>`;
         advance();

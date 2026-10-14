@@ -20,6 +20,9 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 export function mount(root, cards, ctx) {
   const usable = cards.filter((c) => c.term && c.definition);
   const ROUNDS = Math.min(10, usable.length);
+  const difficulty = ctx.difficulty || 'medium';
+  const TICK = { easy: 195, medium: 150, hard: 115 }[difficulty] || 150;
+  const NOPTS = difficulty === 'easy' ? 3 : 4;
   let order, roundIdx, score, lives, snake, dir, nextDir, targets, tickId, dpr, canvas, g, ended, roundDone;
 
   function place(occupied) {
@@ -32,9 +35,9 @@ export function mount(root, cards, ctx) {
 
   function newRound() {
     const card = order[roundIdx];
-    const opts = shuffle([{ text: card.term, correct: true }, ...sample(usable, 3, card).map((c) => ({ text: c.term, correct: false }))]);
+    const opts = shuffle([{ text: card.term, correct: true }, ...sample(usable, NOPTS - 1, card).map((c) => ({ text: c.term, correct: false }))]);
     const occ = new Set(snake.map((s) => s.x + ',' + s.y));
-    targets = opts.slice(0, 4).map((o, k) => ({ ...o, ...place(occ), letter: LETTERS[k] }));
+    targets = opts.slice(0, NOPTS).map((o, k) => ({ ...o, ...place(occ), letter: LETTERS[k] }));
     roundDone = false;
     setClue(card.definition, opts);
   }
@@ -73,6 +76,7 @@ export function mount(root, cards, ctx) {
     snake.unshift(head);
     const hit = targets.find((t) => t.x === head.x && t.y === head.y);
     if (hit) {
+      if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, hit.correct);
       if (hit.correct) {
         score += 100;
         sound.play('correct');
@@ -169,7 +173,7 @@ export function mount(root, cards, ctx) {
     updateHud();
     draw();
     clearInterval(tickId);
-    tickId = setInterval(tick, 150);
+    tickId = setInterval(tick, TICK);
   }
 
   function build() {
