@@ -3,6 +3,7 @@
 import { el, clear, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
 import { buildQuestions } from '../questions.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'timeattack',
@@ -60,6 +61,7 @@ export function mount(root, cards, ctx) {
     attempts++;
     const good = opt.correct;
     if (ctx.onCard && questions[qi] && questions[qi].answerTerm) ctx.onCard(questions[qi].answerTerm, good);
+    if (!good || Math.random() < 0.4) meme.pop(good);
     if (good) {
       combo++;
       bestCombo = Math.max(bestCombo, combo);

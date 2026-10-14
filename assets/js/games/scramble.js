@@ -2,6 +2,7 @@
 // A word-manipulation game (not a recall quiz): tap letters into the slots.
 import { el, clear, shuffle, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'scramble',
@@ -148,6 +149,7 @@ export function mount(root, cards, ctx) {
           const gained = Math.max(25, 100 - hints * 25);
           score += gained;
           sound.play('correct');
+          meme.pop(true);
           if (ctx.onCard) ctx.onCard(card.term, true);
           status.className = 'sc-status show good';
           status.textContent = `✓ Correct!  +${gained}`;

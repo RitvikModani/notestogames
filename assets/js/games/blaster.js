@@ -3,6 +3,7 @@
 // A real action game: reflex + recall, lives, combos and rising speed.
 import { el, clear, shuffle, sample, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'blaster',
@@ -70,6 +71,7 @@ export function mount(root, cards, ctx) {
       lives--;
       shake = 14;
       flash('MISS', '#ff5252');
+      meme.pop(false);
       if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, false);
     }
     combo = failed ? 0 : combo;
@@ -88,6 +90,7 @@ export function mount(root, cards, ctx) {
       score += gained;
       block.hitFx = 1;
       sound.play('correct');
+      if (combo >= 3 || Math.random() < 0.35) meme.pop(true);
       if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, true);
       burst(block.x, block.y, '#2ec4b6', 26);
       flash(`+${gained}${combo > 1 ? `  x${combo}` : ''}`, '#2ec4b6');

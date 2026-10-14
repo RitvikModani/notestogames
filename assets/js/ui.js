@@ -1,4 +1,5 @@
-// ui.js — small DOM + effects helpers shared across games. Zero dependencies.
+// ui.js — small DOM + effects helpers shared across games.
+import { meme } from './memes.js';
 
 // Hyperscript-lite element builder: el('div.card', { onclick }, [children])
 export function el(tag, props = {}, children = []) {
@@ -116,10 +117,11 @@ export function confetti(duration = 1400) {
 // Standard "you finished" panel used by every game.
 export function resultPanel({ score, total, best, onReplay, onExit, message }) {
   const pct = total ? Math.round((score / total) * 100) : 0;
-  const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 40 ? '👍' : '💪';
+  const m = meme.forScore(pct);
   return el('div.result-panel', {}, [
-    el('div.result-emoji', { text: emoji }),
+    el('div.result-emoji', { text: m.emoji }),
     el('h2', { text: message || 'Round complete!' }),
+    el('p.result-meme', { text: m.caption }),
     el('p.result-score', { html: `You scored <b>${score}</b> / ${total} &nbsp;(${pct}%)` }),
     best != null ? el('p.result-best', { text: `Best: ${best}` }) : null,
     el('div.result-actions', {}, [

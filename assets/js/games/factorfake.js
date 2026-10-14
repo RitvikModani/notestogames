@@ -3,6 +3,7 @@
 import { el, clear, shuffle, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
 import { factStatement } from '../questions.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'factorfake',
@@ -40,6 +41,7 @@ export function mount(root, cards, ctx) {
     locked = true;
     const correct = saidReal === fact.isReal;
     if (ctx.onCard) ctx.onCard(fact.term, correct);
+    meme.pop(correct);
     if (correct) { score++; sound.play('correct'); } else sound.play('wrong');
     const verdict = el('div.ff-verdict.show ' + (correct ? 'good' : 'bad'), {
       html: correct
