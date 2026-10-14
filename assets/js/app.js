@@ -4,6 +4,7 @@ import { parseNotes, guessSubject } from './parser.js';
 import { summarize } from './summarize.js';
 import { el, clear, toast, confetti } from './ui.js';
 import { sound } from './sound.js';
+import { meme } from './memes.js';
 
 import { extractFile, ACCEPTED } from './extract.js';
 import * as blaster from './games/blaster.js';
@@ -214,23 +215,28 @@ function viewImport() {
 
   notesArea.addEventListener('input', debounce(refreshPreview, 250));
 
-  // ---- File upload (PDF / Word / PowerPoint / text) ----
+  // ---- File upload (PDF / Word / PowerPoint / text / photo) ----
   const fileInput = el('input', { type: 'file', accept: ACCEPTED, multiple: true, style: 'display:none' });
+  const cameraInput = el('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
   const dropStatus = el('span.drop-status');
   const dropzone = el('label.dropzone', {}, [
     el('span.drop-icon', { text: '📄' }),
-    el('span.drop-main', { html: '<b>Upload a file</b> — PDF, Word (.docx), PowerPoint (.pptx) or text' }),
+    el('span.drop-main', { html: '<b>Upload a file or photo</b> — PDF, Word, PowerPoint, an image of notes, or text' }),
     dropStatus,
     fileInput,
   ]);
+  const photoBtn = el('button.btn.btn-ghost.photo-btn', { type: 'button', onclick: () => cameraInput.click(), text: '📷 Take a photo of notes' });
+  cameraInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
   async function handleFiles(files) {
     if (!files || !files.length) return;
     dropzone.classList.add('busy');
     for (const file of files) {
-      dropStatus.textContent = `Reading ${file.name}…`;
+      const isImg = /^image\//.test(file.type) || /\.(png|jpe?g|webp|bmp|heic|gif)$/i.test(file.name);
+      dropStatus.textContent = isImg ? `Reading photo…` : `Reading ${file.name}…`;
       try {
-        const { text, kind } = await extractFile(file);
+        const onProgress = isImg ? (p) => { dropStatus.textContent = `Reading photo… ${Math.round(p * 100)}%`; } : null;
+        const { text, kind } = await extractFile(file, onProgress);
         const clean = (text || '').trim();
         if (!clean || clean.length < 20) {
           dropStatus.textContent = '';
@@ -280,6 +286,7 @@ function viewImport() {
         el('div.import-left', {}, [
           titleInput,
           dropzone,
+          el('div.photo-row', {}, [photoBtn, el('span.photo-hint', { text: 'reads printed or neatly-written notes' })]),
           el('div.or-divider', {}, [el('span', { text: 'or paste / type below' })]),
           notesArea,
           el('div.import-actions', {}, [
@@ -529,6 +536,48 @@ soundBtn.addEventListener('click', () => {
   refreshSoundBtn();
 });
 refreshSoundBtn();
+
+// Meme toggle
+const memeBtn = document.getElementById('meme-toggle');
+function refreshMemeBtn() {
+  const on = meme.isOn();
+  memeBtn.textContent = on ? '😂' : '😐';
+  memeBtn.setAttribute('aria-pressed', String(on));
+  memeBtn.classList.toggle('muted', !on);
+}
+if (memeBtn) {
+  memeBtn.addEventListener('click', () => {
+    const on = meme.toggle();
+    refreshMemeBtn();
+    toast(on ? 'Memes on 😹' : 'Memes off', on ? 'good' : 'bad');
+  });
+  refreshMemeBtn();
+}
+
+// Theme toggle (light / dark). Stored choice overrides OS preference.
+const THEME_KEY = 'n2g.theme.v1';
+const themeBtn = document.getElementById('theme-toggle');
+function currentTheme() {
+  const set = document.documentElement.getAttribute('data-theme');
+  if (set) return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  if (themeBtn) themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+}
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) { /* ignore */ }
+  applyTheme(saved || currentTheme());
+})();
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+  });
+}
 
 // Light click feedback on navigation controls (games handle their own sounds).
 document.addEventListener('click', (e) => {

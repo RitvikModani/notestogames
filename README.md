@@ -14,14 +14,20 @@ cost — everything runs in your browser and your notes never leave your device.
 
 ## ✨ What it does
 
-1. **Bring your material.** Upload a **PDF, Word (.docx) or PowerPoint (.pptx)**,
-   or paste notes directly. Files are parsed **in your browser** — nothing is ever
-   uploaded, so it's private and free. Word/PowerPoint use the native
-   `DecompressionStream` API; PDFs (including exam papers with embedded fonts) are
-   read with a bundled build of **[pdf.js](https://mozilla.github.io/pdf.js/)**
-   (Apache-2.0), loaded on demand. Scanned/image-only PDFs can't be read as text —
-   copy-paste those. A quality check rejects unreadable files instead of making
-   garbage games.
+1. **Bring your material.** Upload a **PDF, Word (.docx), PowerPoint (.pptx)**, a
+   **photo of your notes**, or paste text. Everything is processed **in your
+   browser** — nothing is ever uploaded, so it's private and free.
+   - Word/PowerPoint use the native `DecompressionStream` API.
+   - PDFs (including exam papers with embedded fonts) are read with a bundled
+     **[pdf.js](https://mozilla.github.io/pdf.js/)** (Apache-2.0).
+   - **📷 Photos / handwriting** are read with a self-hosted
+     **[Tesseract.js](https://tesseract.projectnaptha.com/)** (Apache-2.0) OCR
+     engine + English model, loaded on demand — fully offline. Use the **"Take a
+     photo"** button on mobile. OCR works best on **clear, well-lit, printed or
+     neatly-written** notes; messy cursive is hard for any free offline OCR. (In
+     the lightweight single-file build the OCR engine isn't bundled, so photos are
+     read on the hosted site.)
+   - A quality check rejects unreadable files instead of making garbage games.
    It understands the formats students actually use:
    - `Term: definition` / `Term - definition`
    - `Q: question` / `A: answer` (the answer becomes the concept, the question the clue)
@@ -134,7 +140,7 @@ assets/js/
   games/                 # blaster · snake · timeattack · climb · factorfake
                          # · wordsearch · match · scramble · hangman
   study/                 # flashcards · quiz (calm, self-paced study tools)
-assets/vendor/           # pdf.js build (pdf.min.mjs + worker), Apache-2.0
+assets/vendor/           # pdf.js (PDF) + tesseract/ (photo OCR engine + model)
 .nojekyll                # serve files as-is on GitHub Pages
 ```
 
@@ -149,6 +155,9 @@ yellow, green, pink) on warm paper, grain texture, offset "misprint" accents,
 chunky ink outlines, and an editorial left-aligned hero. For fun, correct/wrong
 answers trigger **meme reactions** — built from emoji + meme-culture captions
 (no copyrighted images), so it stays free and offline.
+
+**Toggles** (top bar): **🌙/☀️ light & dark** theme, **😂/😐 memes on/off**, and
+**🔊/🔇 sound** — each remembered on your device.
 
 ## 🔒 Privacy
 

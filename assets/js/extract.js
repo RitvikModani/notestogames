@@ -196,6 +196,43 @@ async function extractPdfLite(buffer) {
   return text.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+// ---- Images / photos (OCR via vendored Tesseract.js) ----
+// Works offline on the hosted site (the engine + model are self-hosted). It's
+// best at clear printed or neatly-written text; messy cursive is hard for any
+// free offline OCR. Absent in the single-file artifact → friendly fallback.
+let tessPromise = null;
+function loadTesseract() {
+  if (tessPromise) return tessPromise;
+  const base = (typeof document !== 'undefined' && document.baseURI) || location.href;
+  const dir = new URL('assets/vendor/tesseract/', base).href;
+  tessPromise = import(dir + 'tesseract.esm.min.js')
+    .then((mod) => ({ create: mod.createWorker || (mod.default && mod.default.createWorker), dir }))
+    .catch(() => { tessPromise = null; throw new Error('ocr-unavailable'); });
+  return tessPromise;
+}
+
+async function extractImage(file, onProgress) {
+  const { create, dir } = await loadTesseract();
+  if (!create) throw new Error('ocr-unavailable');
+  const worker = await create('eng', 1, {
+    workerPath: dir + 'worker.min.js',
+    corePath: dir,
+    langPath: dir,
+    gzip: true,
+    logger: (m) => { if (m.status === 'recognizing text' && onProgress) onProgress(m.progress); },
+  });
+  try {
+    const { data } = await worker.recognize(file);
+    return (data && data.text ? data.text : '').trim();
+  } finally {
+    try { await worker.terminate(); } catch (e) { /* ignore */ }
+  }
+}
+
+function isImage(name, type) {
+  return /\.(png|jpe?g|webp|bmp|gif|heic)$/i.test(name) || (type && type.startsWith('image/'));
+}
+
 // Quality gate: reject binary/font gibberish so we never build garbage games.
 // Mojibake from mis-decoded fonts is full of accented/symbol characters, so we
 // measure the share of characters OUTSIDE normal Latin study text rather than
@@ -211,29 +248,42 @@ function isGibberish(s) {
 /**
  * Extract text from a File. Returns { text, kind } or throws with a friendly message.
  */
-export async function extractFile(file) {
+export async function extractFile(file, onProgress) {
   const name = (file.name || '').toLowerCase();
-  const buffer = await file.arrayBuffer();
   let text = '';
   let kind = 'Text';
   try {
-    if (name.endsWith('.pdf')) { text = await extractPdf(buffer); kind = 'PDF'; }
-    else if (name.endsWith('.docx')) { text = await extractDocx(buffer); kind = 'Word'; }
-    else if (name.endsWith('.pptx')) { text = await extractPptx(buffer); kind = 'PowerPoint'; }
-    else if (name.endsWith('.doc') || name.endsWith('.ppt')) {
-      throw new Error('Old .doc/.ppt formats aren\'t supported — please re-save as .docx / .pptx.');
-    } else { text = new TextDecoder().decode(buffer); kind = /\.(txt|md|csv)$/.test(name) ? 'Text' : 'Text'; }
+    if (isImage(name, file.type)) {
+      text = await extractImage(file, onProgress);
+      kind = 'Photo';
+    } else {
+      const buffer = await file.arrayBuffer();
+      if (name.endsWith('.pdf')) { text = await extractPdf(buffer); kind = 'PDF'; }
+      else if (name.endsWith('.docx')) { text = await extractDocx(buffer); kind = 'Word'; }
+      else if (name.endsWith('.pptx')) { text = await extractPptx(buffer); kind = 'PowerPoint'; }
+      else if (name.endsWith('.doc') || name.endsWith('.ppt')) {
+        throw new Error('Old .doc/.ppt formats aren\'t supported — please re-save as .docx / .pptx.');
+      } else { text = new TextDecoder().decode(buffer); kind = 'Text'; }
+    }
   } catch (err) {
+    if (err && err.message === 'ocr-unavailable') {
+      throw new Error('Photo OCR runs on the hosted (GitHub Pages) version of the app. Here, type or paste your notes instead.');
+    }
     throw new Error(err.message && err.message.includes('re-save') ? err.message
-      : 'Couldn\'t read that file. Try copy-pasting the text instead.');
+      : (isImage(name, file.type)
+        ? 'Couldn\'t read that photo. Try a sharper, well-lit shot of printed or neatly-written notes.'
+        : 'Couldn\'t read that file. Try copy-pasting the text instead.'));
   }
 
   if (isGibberish(text)) {
-    throw new Error(kind === 'PDF'
-      ? 'This PDF\'s text couldn\'t be read (it\'s likely a scan or uses embedded fonts). Tip: open it, copy the text, and paste it below — or upload the original slides/notes as .pptx / .docx.'
-      : 'That file didn\'t contain readable text — try copy-pasting the text instead.');
+    throw new Error(
+      kind === 'Photo'
+        ? 'Couldn\'t make out enough text in that photo. OCR works best on clear, well-lit, printed or neatly-written notes — messy cursive is hard. You can also type/paste.'
+        : kind === 'PDF'
+          ? 'This PDF\'s text couldn\'t be read (it\'s likely a scan or uses embedded fonts). Tip: open it, copy the text, and paste it below — or upload the original slides/notes as .pptx / .docx.'
+          : 'That file didn\'t contain readable text — try copy-pasting the text instead.');
   }
   return { text, kind };
 }
 
-export const ACCEPTED = '.pdf,.docx,.pptx,.txt,.md,.csv';
+export const ACCEPTED = '.pdf,.docx,.pptx,.txt,.md,.csv,.png,.jpg,.jpeg,.webp,.bmp,.heic,image/*';
