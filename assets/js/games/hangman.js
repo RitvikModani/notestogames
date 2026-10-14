@@ -1,6 +1,7 @@
 // Word Guess — hangman-style guessing of key terms, with the definition as a clue.
 import { el, clear, shuffle, confetti, resultPanel, toast } from '../ui.js';
 import { sound } from '../sound.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'hangman',
@@ -94,6 +95,7 @@ export function mount(root, cards, ctx) {
         done = true;
         score++;
         sound.play('correct');
+        meme.pop(true);
         if (ctx.onCard) ctx.onCard(card.term, true);
         status.className = 'hm-status good show';
         status.textContent = '✓ Solved!';
@@ -102,6 +104,7 @@ export function mount(root, cards, ctx) {
       } else if (misses >= MAX_MISSES) {
         done = true;
         sound.play('wrong');
+        meme.pop(false);
         if (ctx.onCard) ctx.onCard(card.term, false);
         status.className = 'hm-status bad show';
         status.innerHTML = `✗ It was <b>${card.term}</b>`;

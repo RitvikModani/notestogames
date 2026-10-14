@@ -119,8 +119,10 @@ serve the files as-is.
 
 ```
 index.html               # app shell
-assets/css/style.css     # "Midnight Studio" theme (elegant dark, warm amber accent)
+assets/css/style.css     # "Riso Arcade" theme — bold riso inks on warm paper
+assets/css/fonts.css     # self-hosted Bricolage Grotesque (OFL), inlined as data URIs
 assets/js/
+  memes.js               # self-contained meme reactions on right/wrong (no images)
   app.js                 # routing + views (home, import, deck, game) + file upload
   parser.js              # notes/document text -> accurately categorised study cards
   summarize.js           # client-side extractive summary (TL;DR, key points/terms)
@@ -135,6 +137,18 @@ assets/js/
 assets/vendor/           # pdf.js build (pdf.min.mjs + worker), Apache-2.0
 .nojekyll                # serve files as-is on GitHub Pages
 ```
+
+## 🎨 Design — "Riso Arcade"
+
+A deliberately distinctive, risograph-inspired look that avoids the usual
+AI-generated-website tells (no Inter, no indigo→purple gradient, no
+glassmorphism, no gradient text, no accent-rail cards, nothing centered by
+default). Instead: a real display typeface (**Bricolage Grotesque**, self-hosted
+so it works offline and inside the sandboxed build), bold riso inks (coral, blue,
+yellow, green, pink) on warm paper, grain texture, offset "misprint" accents,
+chunky ink outlines, and an editorial left-aligned hero. For fun, correct/wrong
+answers trigger **meme reactions** — built from emoji + meme-culture captions
+(no copyrighted images), so it stays free and offline.
 
 ## 🔒 Privacy
 

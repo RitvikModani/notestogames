@@ -4,6 +4,7 @@
 import { el, clear, confetti, resultPanel, looseMatch, toast } from '../ui.js';
 import { sound } from '../sound.js';
 import { buildQuestions } from '../questions.js';
+import { meme } from '../memes.js';
 
 export const meta = { id: 'reviewquiz', name: 'Quiz', icon: '✍️', tagline: 'Self-paced review with instant feedback.', accent: 'amber', min: 4, kind: 'study' };
 
@@ -41,6 +42,7 @@ export function mount(root, cards, ctx) {
     answered = true;
     const correct = !!opt.correct;
     if (correct) { score++; sound.play('correct'); } else sound.play('wrong');
+    meme.pop(correct);
     record(q, correct);
     [...root.querySelectorAll('.q-opt')].forEach((b) => { b.disabled = true; if (b.__correct) b.classList.add('correct'); });
     if (!correct) btn.classList.add('wrong');
@@ -54,6 +56,7 @@ export function mount(root, cards, ctx) {
     answered = true;
     const correct = looseMatch(val, q.answer);
     if (correct) { score++; sound.play('correct'); } else sound.play('wrong');
+    meme.pop(correct);
     record(q, correct);
     input.disabled = true;
     input.classList.add(correct ? 'correct' : 'wrong');

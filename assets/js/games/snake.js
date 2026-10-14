@@ -3,6 +3,7 @@
 // costs a life. Movement + recall.
 import { el, clear, shuffle, sample, confetti, resultPanel, toast } from '../ui.js';
 import { sound } from '../sound.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'snake',
@@ -76,6 +77,7 @@ export function mount(root, cards, ctx) {
     snake.unshift(head);
     const hit = targets.find((t) => t.x === head.x && t.y === head.y);
     if (hit) {
+      if (!hit.correct || Math.random() < 0.5) meme.pop(hit.correct);
       if (ctx.onCard && order[roundIdx]) ctx.onCard(order[roundIdx].term, hit.correct);
       if (hit.correct) {
         score += 100;

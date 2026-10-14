@@ -2,6 +2,7 @@
 // your weakest first (spaced repetition), and every rating updates mastery.
 import { el, clear, shuffle, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
+import { meme } from '../memes.js';
 
 export const meta = { id: 'flashcards', name: 'Flashcards', icon: '🗂️', tagline: 'Flip through and rate what you know.', accent: 'sky', min: 1, kind: 'study' };
 
@@ -58,6 +59,7 @@ export function mount(root, allCards, ctx) {
   function next(gotIt) {
     if (gotIt) known++;
     if (ctx.onCard) ctx.onCard(deck[i].term, gotIt);
+    meme.pop(gotIt);
     sound.play(gotIt ? 'correct' : 'select');
     i++; flipped = false;
     if (i >= deck.length) finish(); else render();

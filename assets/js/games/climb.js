@@ -4,6 +4,7 @@
 import { el, clear, confetti, resultPanel } from '../ui.js';
 import { sound } from '../sound.js';
 import { buildQuestions } from '../questions.js';
+import { meme } from '../memes.js';
 
 export const meta = {
   id: 'climb',
@@ -46,6 +47,7 @@ export function mount(root, cards, ctx) {
     if (locked || ended) return;
     locked = true;
     if (ctx.onCard && currentQ && currentQ.answerTerm) ctx.onCard(currentQ.answerTerm, !!opt.correct);
+    if (!opt.correct || Math.random() < 0.6) meme.pop(!!opt.correct);
     [...root.querySelectorAll('.q-opt')].forEach((b) => { b.disabled = true; if (b.__correct) b.classList.add('correct'); });
     if (opt.correct) {
       score += rungValue(height);

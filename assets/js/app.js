@@ -87,13 +87,45 @@ function viewHome() {
   clear(app);
   const decks = store.getDecks();
 
+  const heroArt = `
+<svg viewBox="0 0 340 300" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#1a1710" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- note card -->
+    <g transform="rotate(-7 95 140)">
+      <rect x="26" y="52" width="150" height="176" rx="14" fill="#fffdf8"/>
+      <path d="M150 52 L176 52 L176 78 Z" fill="#ffc21e"/>
+      <line x1="48" y1="96" x2="150" y2="96" stroke="#ff5247"/>
+      <line x1="48" y1="124" x2="150" y2="124" stroke="#2b4cf0"/>
+      <line x1="48" y1="152" x2="134" y2="152"/>
+      <line x1="48" y1="180" x2="150" y2="180" stroke="#12b76a"/>
+    </g>
+    <!-- arrow -->
+    <path d="M182 150 q22 -14 44 0" fill="none"/>
+    <path d="M220 136 l10 10 -12 8" fill="none"/>
+    <!-- joystick -->
+    <ellipse cx="276" cy="222" rx="46" ry="20" fill="#ffc21e"/>
+    <line x1="276" y1="206" x2="276" y2="168"/>
+    <circle cx="276" cy="154" r="18" fill="#ff5247"/>
+    <circle cx="246" cy="214" r="8" fill="#2b4cf0"/>
+    <circle cx="300" cy="212" r="8" fill="#12b76a"/>
+    <!-- sparkle + dots -->
+    <path d="M196 78 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 Z" fill="#2b4cf0" stroke-width="2"/>
+  </g>
+  <g fill="#1a1710"><circle cx="300" cy="96" r="3"/><circle cx="314" cy="112" r="3"/><circle cx="34" cy="250" r="3"/><circle cx="52" cy="262" r="3"/></g>
+</svg>`;
+
   const hero = el('section.hero', {}, [
-    el('div.hero-badge', { text: '100% free · works offline · your notes stay on your device' }),
-    el('h1.hero-title', { html: 'Turn your notes into<br><span class="grad">games you actually enjoy</span>' }),
-    el('p.hero-sub', {
-      text: 'Upload a PDF, Word or PowerPoint — or paste your notes — and get an instant summary, flashcards, quizzes and 9 arcade games. No sign-up, no subscription, and your files never leave your device.',
-    }),
-    el('button.btn.btn-primary.btn-lg', { onclick: viewImport, text: '➕ Add your notes' }),
+    el('div.hero-copy', {}, [
+      el('div.hero-badge', { text: '⚡ 100% free · works offline · your notes stay on your device' }),
+      el('h1.hero-title', { html: 'Turn your notes into<br><span class="grad">games you’ll actually play</span>' }),
+      el('p.hero-sub', {
+        text: 'Drop in a PDF, Word or PowerPoint — or paste your notes — and get an instant summary, smart flashcards, quizzes and 9 arcade games, with difficulty levels and mastery tracking. No sign-up. Nothing leaves your device.',
+      }),
+      el('div.hero-cta', {}, [
+        el('button.btn.btn-primary.btn-lg', { onclick: viewImport, text: '➕ Add your notes' }),
+      ]),
+    ]),
+    el('div.hero-art', { html: heroArt }),
   ]);
 
   const gamesStrip = el('div.games-strip', {}, GAMES.map((g) =>
